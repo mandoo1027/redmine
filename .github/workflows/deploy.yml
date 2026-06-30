@@ -1,0 +1,50 @@
+name: Deploy
+
+# main 브랜치 push 시 홈서버(mandoo1027.tplinkdns.com)로 자동 배포
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: mandoo1027.tplinkdns.com
+          username: gyeong-il
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # 빌드 시간이 길 수 있으므로 타임아웃 확대
+          command_timeout: 20m
+          script: |
+            set -e
+            source ~/.nvm/nvm.sh
+            nvm use 20
+            export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+            export PATH="$JAVA_HOME/bin:$PATH"
+
+            cd ~/develop/redmine
+            git fetch --all
+            git reset --hard origin/main
+
+            # ---- 백엔드 빌드 (Spring Boot bootJar) ----
+            cd backend
+            chmod +x ./gradlew
+            ./gradlew bootJar -x test
+            mkdir -p data
+
+            # ---- 백엔드 재기동 (PM2, prod 프로파일, 포트 8082) ----
+            JAR=$(ls -t build/libs/redmine-backend-*.jar | head -1)
+            pm2 delete redmine-backend 2>/dev/null || true
+            pm2 start "$JAVA_HOME/bin/java" --name redmine-backend --cwd "$PWD" -- \
+              -jar "$PWD/$JAR" --spring.profiles.active=prod
+
+            # ---- 프론트엔드 빌드 (Vite, base=/redmine/) ----
+            cd ../frontend
+            npm ci
+            npm run build
+            # nginx 가 ~/develop/redmine/frontend/dist 를 직접 alias 서빙
+
+            pm2 save
