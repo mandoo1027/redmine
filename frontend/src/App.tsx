@@ -1,8 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
+import AdminRoute from './auth/AdminRoute';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import UsersPage from './pages/UsersPage';
 import DashboardPage from './pages/DashboardPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
@@ -24,6 +27,7 @@ export default function App() {
       <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route
             element={
               <ProtectedRoute>
@@ -34,6 +38,14 @@ export default function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/issues" element={<AllIssuesPage />} />
+            <Route
+              path="/users"
+              element={
+                <AdminRoute>
+                  <UsersPage />
+                </AdminRoute>
+              }
+            />
             <Route path="/projects/:projectId" element={<ProjectDetailPage />}>
               <Route index element={<ProjectOverviewPage />} />
               <Route path="issues" element={<IssuesPage />} />

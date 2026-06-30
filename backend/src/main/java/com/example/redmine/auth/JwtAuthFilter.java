@@ -28,8 +28,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
 
-        // Public endpoints: login and CORS preflight
-        if (path.equals("/api/auth/login") || request.getMethod().equals("OPTIONS")) {
+        // Public endpoints: login, register and CORS preflight
+        if (path.equals("/api/auth/login") || path.equals("/api/auth/register")
+                || request.getMethod().equals("OPTIONS")) {
             filterChain.doFilter(request, response);
             return;
         }

@@ -41,6 +41,7 @@ export default function Layout() {
             {navItem('/', '대시보드')}
             {navItem('/projects', '프로젝트')}
             {navItem('/issues', '이슈')}
+            {user?.role === 'ADMIN' && navItem('/users', '사용자 관리')}
           </nav>
         </aside>
         <main className="flex-1 bg-gray-100 p-6">

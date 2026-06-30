@@ -2,7 +2,9 @@ package com.example.redmine.auth;
 
 import com.example.redmine.auth.dto.LoginRequest;
 import com.example.redmine.auth.dto.LoginResponse;
+import com.example.redmine.auth.dto.RegisterRequest;
 import com.example.redmine.common.BadRequestException;
+import com.example.redmine.user.Role;
 import com.example.redmine.user.User;
 import com.example.redmine.user.UserDto;
 import com.example.redmine.user.UserRepository;
@@ -35,6 +37,23 @@ public class AuthController {
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadRequestException("Invalid username or password");
         }
+        String token = jwtUtil.generateToken(user.getUsername());
+        return new LoginResponse(token, UserDto.from(user));
+    }
+
+    @PostMapping("/register")
+    public LoginResponse register(@Valid @RequestBody RegisterRequest request) {
+        if (userRepository.existsByUsername(request.username())) {
+            throw new BadRequestException("이미 사용 중인 아이디입니다.");
+        }
+        String displayName = (request.displayName() == null || request.displayName().isBlank())
+                ? request.username()
+                : request.displayName();
+        User user = userRepository.save(new User(
+                request.username(),
+                passwordEncoder.encode(request.password()),
+                displayName,
+                Role.USER));
         String token = jwtUtil.generateToken(user.getUsername());
         return new LoginResponse(token, UserDto.from(user));
     }

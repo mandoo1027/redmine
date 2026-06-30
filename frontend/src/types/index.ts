@@ -1,7 +1,23 @@
+export type Role = 'ADMIN' | 'USER';
+
 export interface User {
   id: number;
   username: string;
   displayName: string | null;
+  role: Role;
+}
+
+export interface CreateUserPayload {
+  username: string;
+  password: string;
+  displayName?: string;
+  role?: Role;
+}
+
+export interface UpdateUserPayload {
+  displayName?: string;
+  role?: Role;
+  password?: string;
 }
 
 export interface Project {

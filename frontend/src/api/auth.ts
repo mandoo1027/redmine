@@ -11,6 +11,19 @@ export async function login(username: string, password: string): Promise<LoginRe
   return data;
 }
 
+export async function register(
+  username: string,
+  password: string,
+  displayName?: string,
+): Promise<LoginResponse> {
+  const { data } = await client.post<LoginResponse>('/auth/register', {
+    username,
+    password,
+    displayName,
+  });
+  return data;
+}
+
 export async function fetchMe(): Promise<User> {
   const { data } = await client.get<User>('/auth/me');
   return data;
