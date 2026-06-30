@@ -20,9 +20,10 @@ export default function IssuesPage() {
   useEffect(load, [id, filters]);
 
   const handleCreate = async (payload: IssueRequest) => {
-    await createIssue(payload);
+    const created = await createIssue(payload);
     setShowForm(false);
     load();
+    return created;
   };
 
   return (

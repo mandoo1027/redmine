@@ -3,6 +3,8 @@ import { fetchUsers } from '../../api/auth';
 import { fetchMilestones } from '../../api/milestones';
 import RichTextEditor from '../editor/RichTextEditor';
 import DateField from '../common/DateField';
+import AttachmentList from '../attachments/AttachmentList';
+import PendingAttachments from '../attachments/PendingAttachments';
 import { uploadAttachment, attachmentDownloadUrl } from '../../api/attachments';
 import {
   PRIORITIES,
@@ -20,7 +22,8 @@ import {
 interface Props {
   projectId: number;
   initial?: Issue;
-  onSubmit: (payload: IssueRequest) => Promise<void>;
+  // 새 이슈 생성 시 보류 첨부 업로드를 위해 생성된 Issue 를 반환할 수 있다.
+  onSubmit: (payload: IssueRequest) => Promise<Issue | void>;
   onCancel: () => void;
 }
 
@@ -38,6 +41,11 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
   const [users, setUsers] = useState<User[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [error, setError] = useState('');
+  // 새 이슈 작성 시 저장 전까지 보류해 둘 파일들.
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const isNew = !initial?.id;
 
   useEffect(() => {
     fetchUsers().then(setUsers).catch(() => {});
@@ -47,8 +55,9 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
-      await onSubmit({
+      const result = await onSubmit({
         projectId,
         subject,
         description,
@@ -61,8 +70,21 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
         dueDate: dueDate || null,
         progress: Number(progress),
       });
+      // 새 이슈이고 보류 파일이 있으면 생성된 이슈에 일괄 업로드.
+      if (isNew && result && 'id' in result && pendingFiles.length > 0) {
+        for (const f of pendingFiles) {
+          try {
+            await uploadAttachment('ISSUE', result.id, f);
+          } catch {
+            /* 개별 파일 실패는 무시하고 계속 */
+          }
+        }
+        setPendingFiles([]);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || '저장 실패');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -162,12 +184,22 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
           />
         </div>
       </div>
+
+      <div className="mb-4 border-t pt-4">
+        {isNew ? (
+          <PendingAttachments files={pendingFiles} onChange={setPendingFiles} />
+        ) : (
+          <AttachmentList parentType="ISSUE" parentId={initial!.id} />
+        )}
+      </div>
+
       <div className="flex gap-2">
         <button
           type="submit"
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          disabled={submitting}
+          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          저장
+          {submitting ? '저장 중...' : '저장'}
         </button>
         <button
           type="button"

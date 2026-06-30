@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createWikiPage, fetchWikiPage, updateWikiPage } from '../api/wiki';
 import RichTextEditor from '../components/editor/RichTextEditor';
+import AttachmentList from '../components/attachments/AttachmentList';
+import PendingAttachments from '../components/attachments/PendingAttachments';
 import { uploadAttachment, attachmentDownloadUrl } from '../api/attachments';
 
 export default function WikiEditPage() {
@@ -15,6 +17,8 @@ export default function WikiEditPage() {
   const [content, setContent] = useState('');
   const [pageId, setPageId] = useState<number | null>(null);
   const [error, setError] = useState('');
+  // 새 문서 작성 시 저장 전까지 보류해 둘 파일들.
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (isNew || !slug) return;
@@ -33,7 +37,15 @@ export default function WikiEditPage() {
     setError('');
     try {
       if (isNew) {
-        await createWikiPage(id, { slug: pageSlug, title, content });
+        const created = await createWikiPage(id, { slug: pageSlug, title, content });
+        // 새 문서이고 보류 파일이 있으면 생성된 문서에 일괄 업로드.
+        for (const f of pendingFiles) {
+          try {
+            await uploadAttachment('WIKI', created.id, f);
+          } catch {
+            /* 개별 파일 실패는 무시하고 계속 */
+          }
+        }
       } else {
         await updateWikiPage(id, slug!, { slug: pageSlug, title, content });
       }
@@ -83,6 +95,15 @@ export default function WikiEditPage() {
           }
         />
       </div>
+
+      <div className="mb-4 border-t pt-4">
+        {isNew ? (
+          <PendingAttachments files={pendingFiles} onChange={setPendingFiles} />
+        ) : (
+          pageId && <AttachmentList parentType="WIKI" parentId={pageId} />
+        )}
+      </div>
+
       <div className="flex gap-2">
         <button
           type="submit"

@@ -23,6 +23,8 @@ function formatSize(bytes: number): string {
 export default function AttachmentList({ parentType, parentId, editable = true }: Props) {
   const [items, setItems] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -34,20 +36,41 @@ export default function AttachmentList({ parentType, parentId, editable = true }
 
   useEffect(load, [parentType, parentId]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
+  // 여러 파일을 순차 업로드한다(실패한 파일은 메시지로 모아 표시).
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) return;
     setError('');
     setUploading(true);
-    try {
-      await uploadAttachment(parentType, parentId, file);
-      load();
-    } catch (err: any) {
-      setError(err.response?.data?.message || '업로드 실패');
-    } finally {
-      setUploading(false);
+    setProgress({ done: 0, total: files.length });
+    const failed: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      try {
+        await uploadAttachment(parentType, parentId, files[i]);
+      } catch (err: any) {
+        failed.push(files[i].name);
+      }
+      setProgress({ done: i + 1, total: files.length });
     }
+    setUploading(false);
+    setProgress(null);
+    if (failed.length > 0) {
+      setError(`업로드 실패: ${failed.join(', ')}`);
+    }
+    load();
+  };
+
+  const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    uploadFiles(files);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (!editable || uploading) return;
+    const files = Array.from(e.dataTransfer.files || []);
+    uploadFiles(files);
   };
 
   const handleDelete = async (id: number) => {
@@ -59,7 +82,9 @@ export default function AttachmentList({ parentType, parentId, editable = true }
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="font-semibold text-gray-700">첨부파일</h2>
+        <h2 className="font-semibold text-gray-700">
+          첨부파일{items.length > 0 && <span className="ml-1 text-sm text-gray-400">({items.length})</span>}
+        </h2>
         {editable && (
           <>
             <button
@@ -68,13 +93,42 @@ export default function AttachmentList({ parentType, parentId, editable = true }
               disabled={uploading}
               className="rounded border px-3 py-1 text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-50"
             >
-              {uploading ? '업로드 중...' : '+ 파일 추가'}
+              {uploading && progress
+                ? `업로드 중 ${progress.done}/${progress.total}`
+                : '+ 파일 추가'}
             </button>
-            <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} />
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleSelect}
+            />
           </>
         )}
       </div>
+
       {error && <div className="mb-2 rounded bg-red-50 p-2 text-xs text-red-700">{error}</div>}
+
+      {editable && (
+        <div
+          onClick={() => !uploading && fileRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          className={`mb-2 cursor-pointer rounded-md border-2 border-dashed px-3 py-4 text-center text-xs transition-colors ${
+            dragOver
+              ? 'border-blue-400 bg-blue-50 text-blue-600'
+              : 'border-gray-200 text-gray-400 hover:border-gray-300'
+          }`}
+        >
+          파일을 끌어다 놓거나 클릭해서 첨부 (여러 개 가능)
+        </div>
+      )}
+
       {items.length === 0 ? (
         <p className="text-sm text-gray-400">첨부된 파일이 없습니다.</p>
       ) : (
