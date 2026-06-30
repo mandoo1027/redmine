@@ -5,7 +5,7 @@ import RichTextEditor from '../editor/RichTextEditor';
 import DateField from '../common/DateField';
 import AttachmentList from '../attachments/AttachmentList';
 import PendingAttachments from '../attachments/PendingAttachments';
-import { uploadAttachment, attachmentDownloadUrl } from '../../api/attachments';
+import { uploadAttachment, attachmentDownloadUrl, fileToDataUrl } from '../../api/attachments';
 import {
   PRIORITIES,
   PRIORITY_LABELS,
@@ -103,14 +103,15 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
         <RichTextEditor
           value={description}
           onChange={setDescription}
-          onImageUpload={
-            initial?.id
-              ? async (file) => {
-                  const att = await uploadAttachment('ISSUE', initial.id, file);
-                  return attachmentDownloadUrl(att.id, true);
-                }
-              : undefined
-          }
+          onImageUpload={async (file) => {
+            // 기존 이슈 수정 시엔 서버 첨부로 업로드 후 URL 삽입,
+            // 새 이슈 작성 중(ID 없음)엔 base64 data URL 로 본문에 바로 삽입.
+            if (initial?.id) {
+              const att = await uploadAttachment('ISSUE', initial.id, file);
+              return attachmentDownloadUrl(att.id, true);
+            }
+            return fileToDataUrl(file);
+          }}
         />
       </div>
       <div className="mb-4 grid grid-cols-3 gap-4">

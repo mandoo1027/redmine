@@ -4,7 +4,7 @@ import { createWikiPage, fetchWikiPage, updateWikiPage } from '../api/wiki';
 import RichTextEditor from '../components/editor/RichTextEditor';
 import AttachmentList from '../components/attachments/AttachmentList';
 import PendingAttachments from '../components/attachments/PendingAttachments';
-import { uploadAttachment, attachmentDownloadUrl } from '../api/attachments';
+import { uploadAttachment, attachmentDownloadUrl, fileToDataUrl } from '../api/attachments';
 
 export default function WikiEditPage() {
   const { projectId, slug } = useParams();
@@ -85,14 +85,15 @@ export default function WikiEditPage() {
         <RichTextEditor
           value={content}
           onChange={setContent}
-          onImageUpload={
-            pageId
-              ? async (file) => {
-                  const att = await uploadAttachment('WIKI', pageId, file);
-                  return attachmentDownloadUrl(att.id, true);
-                }
-              : undefined
-          }
+          onImageUpload={async (file) => {
+            // 기존 문서 수정 시엔 서버 첨부로 업로드 후 URL 삽입,
+            // 새 문서 작성 중(ID 없음)엔 base64 data URL 로 본문에 바로 삽입.
+            if (pageId) {
+              const att = await uploadAttachment('WIKI', pageId, file);
+              return attachmentDownloadUrl(att.id, true);
+            }
+            return fileToDataUrl(file);
+          }}
         />
       </div>
 

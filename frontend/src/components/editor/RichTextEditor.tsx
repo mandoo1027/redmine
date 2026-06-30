@@ -148,6 +148,26 @@ function Toolbar({
 }
 
 export default function RichTextEditor({ value, onChange, onImageUpload, placeholder }: Props) {
+  // 드롭/붙여넣기 핸들러에서 항상 최신 editor·업로더를 참조하기 위한 ref.
+  const editorRef = useRef<Editor | null>(null);
+  const uploadRef = useRef(onImageUpload);
+  uploadRef.current = onImageUpload;
+
+  const insertImageFile = async (file: File) => {
+    const uploader = uploadRef.current;
+    const ed = editorRef.current;
+    if (!uploader || !ed) return;
+    try {
+      const url = await uploader(file);
+      ed.chain().focus().setImage({ src: url }).run();
+    } catch {
+      alert('이미지 업로드에 실패했습니다.');
+    }
+  };
+
+  const imageFilesFrom = (list?: FileList | null) =>
+    Array.from(list || []).filter((f) => f.type.startsWith('image/'));
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -162,8 +182,26 @@ export default function RichTextEditor({ value, onChange, onImageUpload, placeho
           'prose-sm min-h-[200px] max-w-none px-3 py-2 text-sm leading-relaxed text-gray-800 focus:outline-none',
         ...(placeholder ? { 'data-placeholder': placeholder } : {}),
       },
+      // 이미지 파일을 에디터에 드롭하면 업로드 후 삽입.
+      handleDrop: (_view, event) => {
+        const files = imageFilesFrom((event as DragEvent).dataTransfer?.files);
+        if (files.length === 0 || !uploadRef.current) return false;
+        event.preventDefault();
+        files.forEach((f) => insertImageFile(f));
+        return true;
+      },
+      // 클립보드 이미지를 붙여넣으면(Ctrl+V) 업로드 후 삽입.
+      handlePaste: (_view, event) => {
+        const files = imageFilesFrom((event as ClipboardEvent).clipboardData?.files);
+        if (files.length === 0 || !uploadRef.current) return false;
+        event.preventDefault();
+        files.forEach((f) => insertImageFile(f));
+        return true;
+      },
     },
   });
+
+  editorRef.current = editor;
 
   // 외부에서 초기값이 비동기로 들어오는 경우(수정 화면)에만 동기화.
   // 사용자가 편집 중(포커스 상태)이면 덮어쓰지 않음 → 입력 중 커서 리셋 방지.

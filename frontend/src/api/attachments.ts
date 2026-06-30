@@ -46,3 +46,14 @@ export function attachmentDownloadUrl(id: number, inline = false): string {
   const base = client.defaults.baseURL || '/api';
   return `${base}/attachments/${id}/download${inline ? '?inline=true' : ''}`;
 }
+
+// 파일을 base64 data URL 로 읽는다. 부모 ID가 없는 작성 중 화면에서
+// 이미지를 본문(HTML)에 인라인으로 바로 삽입할 때 사용한다.
+export function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
