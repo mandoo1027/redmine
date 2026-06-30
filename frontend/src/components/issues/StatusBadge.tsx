@@ -18,6 +18,7 @@ const trackerColors: Record<TrackerType, string> = {
   BUG: 'bg-red-50 text-red-700 border border-red-200',
   FEATURE: 'bg-purple-50 text-purple-700 border border-purple-200',
   TASK: 'bg-sky-50 text-sky-700 border border-sky-200',
+  ERROR: 'bg-rose-100 text-rose-800 border border-rose-300',
 };
 
 function Badge({ text, className }: { text: string; className: string }) {

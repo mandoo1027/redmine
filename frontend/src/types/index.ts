@@ -36,7 +36,7 @@ export interface ProjectMember {
   role: string | null;
 }
 
-export type TrackerType = 'BUG' | 'FEATURE' | 'TASK';
+export type TrackerType = 'BUG' | 'FEATURE' | 'TASK' | 'ERROR';
 export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
 export type IssuePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
@@ -94,7 +94,7 @@ export interface WikiPage {
   updatedAt: string;
 }
 
-export const TRACKERS: TrackerType[] = ['BUG', 'FEATURE', 'TASK'];
+export const TRACKERS: TrackerType[] = ['BUG', 'FEATURE', 'TASK', 'ERROR'];
 export const STATUSES: IssueStatus[] = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
 export const PRIORITIES: IssuePriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
@@ -103,6 +103,7 @@ export const TRACKER_LABELS: Record<TrackerType, string> = {
   BUG: '버그',
   FEATURE: '기능',
   TASK: '작업',
+  ERROR: '오류',
 };
 export const STATUS_LABELS: Record<IssueStatus, string> = {
   OPEN: '열림',

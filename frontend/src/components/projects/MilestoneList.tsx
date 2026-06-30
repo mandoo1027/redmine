@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createMilestone, deleteMilestone, fetchMilestones } from '../../api/milestones';
 import type { Milestone } from '../../types';
+import DateField from '../common/DateField';
 
 export default function MilestoneList({ projectId }: { projectId: number }) {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -55,12 +56,7 @@ export default function MilestoneList({ projectId }: { projectId: number }) {
           onChange={(e) => setName(e.target.value)}
           placeholder="마일스톤 이름"
         />
-        <input
-          type="date"
-          className="rounded border px-2 py-1 text-sm"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+        <DateField value={dueDate} onChange={setDueDate} />
         <button className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700">
           추가
         </button>

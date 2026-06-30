@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchUsers } from '../../api/auth';
 import { fetchMilestones } from '../../api/milestones';
 import RichTextEditor from '../editor/RichTextEditor';
+import DateField from '../common/DateField';
 import { uploadAttachment, attachmentDownloadUrl } from '../../api/attachments';
 import {
   PRIORITIES,
@@ -146,26 +147,10 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
           </select>
         </div>
       </div>
-      <div className="mb-4 grid grid-cols-3 gap-4">
-        <div>
-          <label className={label}>시작일</label>
-          <input
-            type="date"
-            className={input}
-            value={startDate || ''}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className={label}>마감일</label>
-          <input
-            type="date"
-            className={input}
-            value={dueDate || ''}
-            onChange={(e) => setDueDate(e.target.value)}
-          />
-        </div>
-        <div>
+      <div className="mb-4 flex flex-wrap items-end gap-4">
+        <DateField label="시작일" value={startDate} onChange={setStartDate} />
+        <DateField label="마감일" value={dueDate} onChange={setDueDate} />
+        <div className="min-w-[180px] flex-1">
           <label className={label}>진행률 ({progress}%)</label>
           <input
             type="range"
