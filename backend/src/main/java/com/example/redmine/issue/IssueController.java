@@ -54,8 +54,8 @@ public class IssueController {
     }
 
     @PutMapping("/api/issues/{id}")
-    public IssueDto update(@PathVariable Long id, @Valid @RequestBody IssueRequest request) {
-        return issueService.update(id, request);
+    public IssueDto update(@PathVariable Long id, @CurrentUser User me, @Valid @RequestBody IssueRequest request) {
+        return issueService.update(id, request, me);
     }
 
     @DeleteMapping("/api/issues/{id}")

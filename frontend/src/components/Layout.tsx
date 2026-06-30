@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import NotificationBell from './NotificationBell';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -26,6 +27,7 @@ export default function Layout() {
           Redmine Clone
         </Link>
         <div className="flex items-center gap-4 text-sm">
+          <NotificationBell />
           <span className="text-gray-600">{user?.displayName || user?.username}</span>
           <button
             onClick={logout}

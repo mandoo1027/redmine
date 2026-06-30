@@ -6,6 +6,7 @@ import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/StatusBadge';
 import RichTextView from '../components/editor/RichTextView';
 import AttachmentList from '../components/attachments/AttachmentList';
+import CommentSection from '../components/issues/CommentSection';
 
 export default function IssueDetailPage() {
   const { projectId, issueId } = useParams();
@@ -101,6 +102,10 @@ export default function IssueDetailPage() {
 
       <div className="border-t pt-4">
         <AttachmentList parentType="ISSUE" parentId={issue.id} />
+      </div>
+
+      <div className="mt-6 border-t pt-4">
+        <CommentSection issueId={issue.id} />
       </div>
     </div>
   );

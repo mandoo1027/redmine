@@ -94,6 +94,27 @@ export interface WikiPage {
   updatedAt: string;
 }
 
+export interface Comment {
+  id: number;
+  issueId: number;
+  authorId: number | null;
+  authorName: string | null;
+  content: string;
+  createdAt: string;
+}
+
+export type NotificationType = 'COMMENT' | 'ASSIGNED';
+
+export interface AppNotification {
+  id: number;
+  type: NotificationType;
+  message: string;
+  issueId: number | null;
+  projectId: number | null;
+  read: boolean;
+  createdAt: string;
+}
+
 export const TRACKERS: TrackerType[] = ['BUG', 'FEATURE', 'TASK', 'ERROR'];
 export const STATUSES: IssueStatus[] = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
 export const PRIORITIES: IssuePriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
