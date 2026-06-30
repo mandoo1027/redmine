@@ -1,5 +1,6 @@
 package com.example.redmine.wiki;
 
+import com.example.redmine.attachment.AttachmentService;
 import com.example.redmine.common.BadRequestException;
 import com.example.redmine.common.NotFoundException;
 import com.example.redmine.project.Project;
@@ -16,10 +17,13 @@ public class WikiPageService {
 
     private final WikiPageRepository wikiRepository;
     private final ProjectRepository projectRepository;
+    private final AttachmentService attachmentService;
 
-    public WikiPageService(WikiPageRepository wikiRepository, ProjectRepository projectRepository) {
+    public WikiPageService(WikiPageRepository wikiRepository, ProjectRepository projectRepository,
+                           AttachmentService attachmentService) {
         this.wikiRepository = wikiRepository;
         this.projectRepository = projectRepository;
+        this.attachmentService = attachmentService;
     }
 
     @Transactional(readOnly = true)
@@ -59,6 +63,7 @@ public class WikiPageService {
 
     public void delete(Long projectId, String slug) {
         WikiPage page = findPage(projectId, slug);
+        attachmentService.deleteAllForParent("WIKI", page.getId());
         wikiRepository.delete(page);
     }
 

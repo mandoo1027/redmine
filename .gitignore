@@ -3,6 +3,7 @@ backend/build/
 backend/.gradle/
 backend/data/
 backend/bin/
+backend/uploads/
 
 # Frontend
 frontend/node_modules/

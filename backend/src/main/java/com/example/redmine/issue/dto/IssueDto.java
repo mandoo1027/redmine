@@ -16,6 +16,8 @@ public record IssueDto(
         String priority,
         Long assigneeId,
         String assigneeName,
+        Long reporterId,
+        String reporterName,
         Long milestoneId,
         String milestoneName,
         LocalDate startDate,
@@ -39,6 +41,12 @@ public record IssueDto(
                         ? (issue.getAssignee().getDisplayName() != null
                             ? issue.getAssignee().getDisplayName()
                             : issue.getAssignee().getUsername())
+                        : null,
+                issue.getReporter() != null ? issue.getReporter().getId() : null,
+                issue.getReporter() != null
+                        ? (issue.getReporter().getDisplayName() != null
+                            ? issue.getReporter().getDisplayName()
+                            : issue.getReporter().getUsername())
                         : null,
                 issue.getMilestone() != null ? issue.getMilestone().getId() : null,
                 issue.getMilestone() != null ? issue.getMilestone().getName() : null,

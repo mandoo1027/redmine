@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
 import { fetchUsers } from '../../api/auth';
 import { fetchMilestones } from '../../api/milestones';
+import RichTextEditor from '../editor/RichTextEditor';
+import { uploadAttachment, attachmentDownloadUrl } from '../../api/attachments';
 import {
   PRIORITIES,
+  PRIORITY_LABELS,
   STATUSES,
+  STATUS_LABELS,
   TRACKERS,
+  TRACKER_LABELS,
   type Issue,
   type IssueRequest,
   type Milestone,
@@ -72,11 +77,17 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
       </div>
       <div className="mb-4">
         <label className={label}>설명</label>
-        <textarea
-          className={input}
-          rows={4}
+        <RichTextEditor
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={setDescription}
+          onImageUpload={
+            initial?.id
+              ? async (file) => {
+                  const att = await uploadAttachment('ISSUE', initial.id, file);
+                  return attachmentDownloadUrl(att.id, true);
+                }
+              : undefined
+          }
         />
       </div>
       <div className="mb-4 grid grid-cols-3 gap-4">
@@ -84,7 +95,9 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
           <label className={label}>유형</label>
           <select className={input} value={tracker} onChange={(e) => setTracker(e.target.value as any)}>
             {TRACKERS.map((t) => (
-              <option key={t}>{t}</option>
+              <option key={t} value={t}>
+                {TRACKER_LABELS[t]}
+              </option>
             ))}
           </select>
         </div>
@@ -92,7 +105,9 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
           <label className={label}>상태</label>
           <select className={input} value={status} onChange={(e) => setStatus(e.target.value as any)}>
             {STATUSES.map((s) => (
-              <option key={s}>{s}</option>
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
             ))}
           </select>
         </div>
@@ -100,7 +115,9 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
           <label className={label}>우선순위</label>
           <select className={input} value={priority} onChange={(e) => setPriority(e.target.value as any)}>
             {PRIORITIES.map((p) => (
-              <option key={p}>{p}</option>
+              <option key={p} value={p}>
+                {PRIORITY_LABELS[p]}
+              </option>
             ))}
           </select>
         </div>

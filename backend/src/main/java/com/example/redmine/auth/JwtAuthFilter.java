@@ -35,6 +35,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        // 첨부파일 다운로드(특히 에디터 내 이미지 <img src>)는 토큰 헤더를 실을 수 없어 공개 허용.
+        // 저장 파일명이 UUID 이고, id 만으로는 추측이 어려워 비교적 안전.
+        if (request.getMethod().equals("GET")
+                && path.matches("/api/attachments/\\d+/download")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Only guard /api/** paths
         if (!path.startsWith("/api/")) {
             filterChain.doFilter(request, response);

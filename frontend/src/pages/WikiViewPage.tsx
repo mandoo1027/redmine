@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteWikiPage, fetchWikiPage } from '../api/wiki';
 import type { WikiPage } from '../types';
-import MarkdownView from '../components/wiki/MarkdownView';
+import RichTextView from '../components/editor/RichTextView';
+import AttachmentList from '../components/attachments/AttachmentList';
 
 export default function WikiViewPage() {
   const { projectId, slug } = useParams();
@@ -56,7 +57,11 @@ export default function WikiViewPage() {
           </button>
         </div>
       </div>
-      <MarkdownView content={page.content || ''} />
+      <RichTextView content={page.content || ''} />
+
+      <div className="mt-6 border-t pt-4">
+        <AttachmentList parentType="WIKI" parentId={page.id} />
+      </div>
     </div>
   );
 }

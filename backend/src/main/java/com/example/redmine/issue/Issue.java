@@ -45,6 +45,11 @@ public class Issue extends BaseEntity {
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
+    // 등록자: 이슈 생성 시 로그인 사용자 자동 기록. 기존 행은 null 허용.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporter_id")
+    private User reporter;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "milestone_id")
     private Milestone milestone;
@@ -116,6 +121,14 @@ public class Issue extends BaseEntity {
 
     public void setAssignee(User assignee) {
         this.assignee = assignee;
+    }
+
+    public User getReporter() {
+        return reporter;
+    }
+
+    public void setReporter(User reporter) {
+        this.reporter = reporter;
     }
 
     public Milestone getMilestone() {

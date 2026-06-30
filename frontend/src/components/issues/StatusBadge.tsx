@@ -1,4 +1,5 @@
 import type { IssuePriority, IssueStatus, TrackerType } from '../../types';
+import { PRIORITY_LABELS, STATUS_LABELS, TRACKER_LABELS } from '../../types';
 
 const statusColors: Record<IssueStatus, string> = {
   OPEN: 'bg-green-100 text-green-800',
@@ -28,13 +29,13 @@ function Badge({ text, className }: { text: string; className: string }) {
 }
 
 export function StatusBadge({ status }: { status: IssueStatus }) {
-  return <Badge text={status} className={statusColors[status]} />;
+  return <Badge text={STATUS_LABELS[status]} className={statusColors[status]} />;
 }
 
 export function PriorityBadge({ priority }: { priority: IssuePriority }) {
-  return <Badge text={priority} className={priorityColors[priority]} />;
+  return <Badge text={PRIORITY_LABELS[priority]} className={priorityColors[priority]} />;
 }
 
 export function TrackerBadge({ tracker }: { tracker: TrackerType }) {
-  return <Badge text={tracker} className={trackerColors[tracker]} />;
+  return <Badge text={TRACKER_LABELS[tracker]} className={trackerColors[tracker]} />;
 }

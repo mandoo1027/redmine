@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createProject, deleteProject, fetchProjects } from '../api/projects';
 import type { Project } from '../types';
+import { useAuth } from '../auth/AuthContext';
 
 export default function ProjectsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [key, setKey] = useState('');
@@ -42,15 +45,17 @@ export default function ProjectsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">프로젝트</h1>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          {showForm ? '취소' : '+ 새 프로젝트'}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {showForm ? '취소' : '+ 새 프로젝트'}
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {isAdmin && showForm && (
         <form onSubmit={handleCreate} className="mb-6 rounded-lg bg-white p-5 shadow-sm">
           {error && <div className="mb-3 rounded bg-red-50 p-2 text-sm text-red-700">{error}</div>}
           <div className="grid grid-cols-2 gap-4">
@@ -121,12 +126,14 @@ export default function ProjectsPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500">{p.description}</td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => handleDelete(p.id)}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      삭제
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        삭제
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

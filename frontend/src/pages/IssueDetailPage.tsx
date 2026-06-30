@@ -4,6 +4,8 @@ import { deleteIssue, fetchIssue, updateIssue } from '../api/issues';
 import type { Issue, IssueRequest } from '../types';
 import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/StatusBadge';
+import RichTextView from '../components/editor/RichTextView';
+import AttachmentList from '../components/attachments/AttachmentList';
 
 export default function IssueDetailPage() {
   const { projectId, issueId } = useParams();
@@ -80,6 +82,7 @@ export default function IssueDetailPage() {
       <div className="mb-6 grid grid-cols-2 gap-x-8">
         {row('상태', <StatusBadge status={issue.status} />)}
         {row('우선순위', <PriorityBadge priority={issue.priority} />)}
+        {row('등록자', issue.reporterName || '-')}
         {row('담당자', issue.assigneeName || '미지정')}
         {row('마일스톤', issue.milestoneName || '없음')}
         {row('시작일', issue.startDate || '-')}
@@ -87,11 +90,17 @@ export default function IssueDetailPage() {
         {row('진행률', `${issue.progress}%`)}
       </div>
 
-      <div>
+      <div className="mb-6">
         <h2 className="mb-2 font-semibold text-gray-700">설명</h2>
-        <p className="whitespace-pre-wrap text-sm text-gray-700">
-          {issue.description || <span className="text-gray-400">설명이 없습니다.</span>}
-        </p>
+        {issue.description ? (
+          <RichTextView content={issue.description} />
+        ) : (
+          <p className="text-sm text-gray-400">설명이 없습니다.</p>
+        )}
+      </div>
+
+      <div className="border-t pt-4">
+        <AttachmentList parentType="ISSUE" parentId={issue.id} />
       </div>
     </div>
   );

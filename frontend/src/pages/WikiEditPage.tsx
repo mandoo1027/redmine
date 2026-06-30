@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createWikiPage, fetchWikiPage, updateWikiPage } from '../api/wiki';
-import MarkdownView from '../components/wiki/MarkdownView';
+import RichTextEditor from '../components/editor/RichTextEditor';
+import { uploadAttachment, attachmentDownloadUrl } from '../api/attachments';
 
 export default function WikiEditPage() {
   const { projectId, slug } = useParams();
@@ -12,8 +13,8 @@ export default function WikiEditPage() {
   const [title, setTitle] = useState('');
   const [pageSlug, setPageSlug] = useState('');
   const [content, setContent] = useState('');
+  const [pageId, setPageId] = useState<number | null>(null);
   const [error, setError] = useState('');
-  const [preview, setPreview] = useState(false);
 
   useEffect(() => {
     if (isNew || !slug) return;
@@ -22,6 +23,7 @@ export default function WikiEditPage() {
         setTitle(p.title);
         setPageSlug(p.slug);
         setContent(p.content || '');
+        setPageId(p.id);
       })
       .catch(() => {});
   }, [id, slug, isNew]);
@@ -67,28 +69,19 @@ export default function WikiEditPage() {
         </div>
       </div>
       <div className="mb-4">
-        <div className="mb-1 flex items-center justify-between">
-          <label className="text-sm text-gray-600">내용 (마크다운)</label>
-          <button
-            type="button"
-            onClick={() => setPreview((v) => !v)}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            {preview ? '편집' : '미리보기'}
-          </button>
-        </div>
-        {preview ? (
-          <div className="min-h-[200px] rounded border p-3">
-            <MarkdownView content={content} />
-          </div>
-        ) : (
-          <textarea
-            className={`${input} font-mono`}
-            rows={14}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-        )}
+        <label className="mb-1 block text-sm text-gray-600">내용</label>
+        <RichTextEditor
+          value={content}
+          onChange={setContent}
+          onImageUpload={
+            pageId
+              ? async (file) => {
+                  const att = await uploadAttachment('WIKI', pageId, file);
+                  return attachmentDownloadUrl(att.id, true);
+                }
+              : undefined
+          }
+        />
       </div>
       <div className="flex gap-2">
         <button

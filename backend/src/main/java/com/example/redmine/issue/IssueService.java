@@ -1,5 +1,6 @@
 package com.example.redmine.issue;
 
+import com.example.redmine.attachment.AttachmentService;
 import com.example.redmine.common.NotFoundException;
 import com.example.redmine.issue.dto.IssueDto;
 import com.example.redmine.issue.dto.IssueRequest;
@@ -23,15 +24,18 @@ public class IssueService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final MilestoneRepository milestoneRepository;
+    private final AttachmentService attachmentService;
 
     public IssueService(IssueRepository issueRepository,
                         ProjectRepository projectRepository,
                         UserRepository userRepository,
-                        MilestoneRepository milestoneRepository) {
+                        MilestoneRepository milestoneRepository,
+                        AttachmentService attachmentService) {
         this.issueRepository = issueRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.milestoneRepository = milestoneRepository;
+        this.attachmentService = attachmentService;
     }
 
     @Transactional(readOnly = true)
@@ -56,10 +60,11 @@ public class IssueService {
         return IssueDto.from(findIssue(id));
     }
 
-    public IssueDto create(IssueRequest request) {
+    public IssueDto create(IssueRequest request, User reporter) {
         Project project = projectRepository.findById(request.projectId())
                 .orElseThrow(() -> new NotFoundException("Project not found: " + request.projectId()));
         Issue issue = new Issue(project, request.subject());
+        issue.setReporter(reporter);
         applyRequest(issue, request);
         return IssueDto.from(issueRepository.save(issue));
     }
@@ -73,6 +78,7 @@ public class IssueService {
 
     public void delete(Long id) {
         Issue issue = findIssue(id);
+        attachmentService.deleteAllForParent("ISSUE", id);
         issueRepository.delete(issue);
     }
 

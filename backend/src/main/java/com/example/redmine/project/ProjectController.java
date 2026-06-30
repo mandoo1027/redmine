@@ -1,9 +1,13 @@
 package com.example.redmine.project;
 
+import com.example.redmine.auth.CurrentUser;
+import com.example.redmine.common.ForbiddenException;
 import com.example.redmine.project.dto.AddMemberRequest;
 import com.example.redmine.project.dto.ProjectDto;
 import com.example.redmine.project.dto.ProjectMemberDto;
 import com.example.redmine.project.dto.ProjectRequest;
+import com.example.redmine.user.Role;
+import com.example.redmine.user.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,18 +44,22 @@ public class ProjectController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProjectDto create(@Valid @RequestBody ProjectRequest request) {
+    public ProjectDto create(@CurrentUser User me, @Valid @RequestBody ProjectRequest request) {
+        requireAdmin(me);
         return projectService.create(request);
     }
 
     @PutMapping("/{id}")
-    public ProjectDto update(@PathVariable Long id, @Valid @RequestBody ProjectRequest request) {
+    public ProjectDto update(@CurrentUser User me, @PathVariable Long id,
+                             @Valid @RequestBody ProjectRequest request) {
+        requireAdmin(me);
         return projectService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public void delete(@CurrentUser User me, @PathVariable Long id) {
+        requireAdmin(me);
         projectService.delete(id);
     }
 
@@ -62,13 +70,22 @@ public class ProjectController {
 
     @PostMapping("/{id}/members")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProjectMemberDto addMember(@PathVariable Long id, @Valid @RequestBody AddMemberRequest request) {
+    public ProjectMemberDto addMember(@CurrentUser User me, @PathVariable Long id,
+                                      @Valid @RequestBody AddMemberRequest request) {
+        requireAdmin(me);
         return projectService.addMember(id, request);
     }
 
     @DeleteMapping("/{id}/members/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeMember(@PathVariable Long id, @PathVariable Long userId) {
+    public void removeMember(@CurrentUser User me, @PathVariable Long id, @PathVariable Long userId) {
+        requireAdmin(me);
         projectService.removeMember(id, userId);
+    }
+
+    private void requireAdmin(User me) {
+        if (me.getRole() != Role.ADMIN) {
+            throw new ForbiddenException("관리자 권한이 필요합니다.");
+        }
     }
 }

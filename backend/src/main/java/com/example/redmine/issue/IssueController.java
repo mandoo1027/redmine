@@ -1,7 +1,9 @@
 package com.example.redmine.issue;
 
+import com.example.redmine.auth.CurrentUser;
 import com.example.redmine.issue.dto.IssueDto;
 import com.example.redmine.issue.dto.IssueRequest;
+import com.example.redmine.user.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -47,8 +49,8 @@ public class IssueController {
 
     @PostMapping("/api/issues")
     @ResponseStatus(HttpStatus.CREATED)
-    public IssueDto create(@Valid @RequestBody IssueRequest request) {
-        return issueService.create(request);
+    public IssueDto create(@CurrentUser User me, @Valid @RequestBody IssueRequest request) {
+        return issueService.create(request, me);
     }
 
     @PutMapping("/api/issues/{id}")
