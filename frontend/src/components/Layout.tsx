@@ -41,8 +41,9 @@ export default function Layout() {
         <aside className="w-48 border-r bg-gray-50 p-3">
           <nav className="space-y-1">
             {navItem('/', '대시보드')}
-            {navItem('/projects', '프로젝트')}
             {navItem('/issues', '이슈')}
+            {navItem('/wiki', '위키')}
+            {user?.role === 'ADMIN' && navItem('/projects', '프로젝트')}
             {user?.role === 'ADMIN' && navItem('/users', '사용자 관리')}
           </nav>
         </aside>

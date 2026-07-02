@@ -1,27 +1,81 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchIssues, type IssueFilters as Filters } from '../api/issues';
+import { createIssue, fetchIssues, type IssueFilters as Filters } from '../api/issues';
 import { fetchProjects } from '../api/projects';
-import type { Issue, Project } from '../types';
+import type { Issue, IssueRequest, Project } from '../types';
 import IssueFilters from '../components/issues/IssueFilters';
+import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/StatusBadge';
 
 export default function AllIssuesPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [filters, setFilters] = useState<Filters>({});
+  const [showForm, setShowForm] = useState(false);
+  // 새 이슈를 등록할 대상 프로젝트.
+  const [formProjectId, setFormProjectId] = useState<number | null>(null);
+
+  const load = () => {
+    fetchIssues(filters).then(setIssues).catch(() => {});
+  };
 
   useEffect(() => {
-    fetchProjects().then(setProjects).catch(() => {});
+    fetchProjects()
+      .then((list) => {
+        setProjects(list);
+        if (list.length > 0) setFormProjectId((prev) => prev ?? list[0].id);
+      })
+      .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    fetchIssues(filters).then(setIssues).catch(() => {});
-  }, [filters]);
+  useEffect(load, [filters]);
+
+  const handleCreate = async (payload: IssueRequest) => {
+    const created = await createIssue(payload);
+    setShowForm(false);
+    load();
+    return created;
+  };
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold text-gray-800">전체 이슈</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800">전체 이슈</h1>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          disabled={projects.length === 0}
+          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        >
+          {showForm ? '취소' : '+ 새 이슈'}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <label className="text-sm text-gray-600">프로젝트</label>
+            <select
+              className="rounded border px-2 py-1 text-sm"
+              value={formProjectId ?? ''}
+              onChange={(e) => setFormProjectId(e.target.value ? Number(e.target.value) : null)}
+            >
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {formProjectId != null && (
+            <IssueForm
+              key={formProjectId}
+              projectId={formProjectId}
+              onSubmit={handleCreate}
+              onCancel={() => setShowForm(false)}
+            />
+          )}
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap gap-3">
         <select

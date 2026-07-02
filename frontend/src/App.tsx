@@ -17,6 +17,7 @@ import GanttPage from './pages/GanttPage';
 import WikiListPage from './pages/WikiListPage';
 import WikiViewPage from './pages/WikiViewPage';
 import WikiEditPage from './pages/WikiEditPage';
+import WikiHomePage from './pages/WikiHomePage';
 import AllIssuesPage from './pages/AllIssuesPage';
 
 // Vite base('/redmine/' 또는 '/')에서 라우터 basename 도출 (끝 슬래시 제거)
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/issues" element={<AllIssuesPage />} />
+            <Route path="/wiki" element={<WikiHomePage />} />
             <Route
               path="/users"
               element={
