@@ -55,12 +55,12 @@ public class IssueService {
                 .and(IssueSpecifications.priority(priority))
                 .and(IssueSpecifications.tracker(tracker))
                 .and(IssueSpecifications.assigneeId(assigneeId));
-        return issueRepository.findAll(spec).stream().map(IssueDto::from).toList();
+        return issueRepository.findAll(spec).stream().map(IssueDto::summary).toList();
     }
 
     @Transactional(readOnly = true)
     public List<IssueDto> listByProject(Long projectId) {
-        return issueRepository.findByProjectId(projectId).stream().map(IssueDto::from).toList();
+        return issueRepository.findByProjectId(projectId).stream().map(IssueDto::summary).toList();
     }
 
     @Transactional(readOnly = true)

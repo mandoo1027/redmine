@@ -7,12 +7,14 @@ import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/S
 import RichTextView from '../components/editor/RichTextView';
 import AttachmentList from '../components/attachments/AttachmentList';
 import CommentSection from '../components/issues/CommentSection';
+import { useDialog } from '../components/ui/DialogProvider';
 
 export default function IssueDetailPage() {
   const { projectId, issueId } = useParams();
   const pid = Number(projectId);
   const iid = Number(issueId);
   const navigate = useNavigate();
+  const { confirm } = useDialog();
   const [issue, setIssue] = useState<Issue | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -29,7 +31,7 @@ export default function IssueDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('이 이슈를 삭제하시겠습니까?')) return;
+    if (!(await confirm('이 이슈를 삭제하시겠습니까?', { title: '이슈 삭제', danger: true }))) return;
     await deleteIssue(iid);
     navigate(`/projects/${pid}/issues`);
   };

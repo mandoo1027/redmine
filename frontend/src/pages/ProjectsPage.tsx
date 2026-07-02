@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { createProject, deleteProject, fetchProjects } from '../api/projects';
 import type { Project } from '../types';
 import { useAuth } from '../auth/AuthContext';
+import { useDialog } from '../components/ui/DialogProvider';
 
 export default function ProjectsPage() {
   const { user } = useAuth();
+  const { confirm } = useDialog();
   const isAdmin = user?.role === 'ADMIN';
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -36,7 +38,7 @@ export default function ProjectsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('이 프로젝트를 삭제하시겠습니까?')) return;
+    if (!(await confirm('이 프로젝트를 삭제하시겠습니까?', { title: '프로젝트 삭제', danger: true }))) return;
     await deleteProject(id);
     load();
   };

@@ -3,6 +3,7 @@ import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
+import { useDialog } from '../ui/DialogProvider';
 
 interface Props {
   value: string;
@@ -43,6 +44,7 @@ function Toolbar({
   editor: Editor;
   onImageUpload?: (file: File) => Promise<string>;
 }) {
+  const { alert } = useDialog();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +55,7 @@ function Toolbar({
       const url = await onImageUpload(file);
       editor.chain().focus().setImage({ src: url }).run();
     } catch {
-      alert('이미지 업로드에 실패했습니다.');
+      await alert('이미지 업로드에 실패했습니다.', { title: '오류' });
     }
   };
 
@@ -148,6 +150,7 @@ function Toolbar({
 }
 
 export default function RichTextEditor({ value, onChange, onImageUpload, placeholder }: Props) {
+  const { alert } = useDialog();
   // 드롭/붙여넣기 핸들러에서 항상 최신 editor·업로더를 참조하기 위한 ref.
   const editorRef = useRef<Editor | null>(null);
   const uploadRef = useRef(onImageUpload);
@@ -161,7 +164,7 @@ export default function RichTextEditor({ value, onChange, onImageUpload, placeho
       const url = await uploader(file);
       ed.chain().focus().setImage({ src: url }).run();
     } catch {
-      alert('이미지 업로드에 실패했습니다.');
+      await alert('이미지 업로드에 실패했습니다.', { title: '오류' });
     }
   };
 

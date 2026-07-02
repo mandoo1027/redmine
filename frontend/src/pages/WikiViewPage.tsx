@@ -4,11 +4,13 @@ import { deleteWikiPage, fetchWikiPage } from '../api/wiki';
 import type { WikiPage } from '../types';
 import RichTextView from '../components/editor/RichTextView';
 import AttachmentList from '../components/attachments/AttachmentList';
+import { useDialog } from '../components/ui/DialogProvider';
 
 export default function WikiViewPage() {
   const { projectId, slug } = useParams();
   const id = Number(projectId);
   const navigate = useNavigate();
+  const { confirm } = useDialog();
   const [page, setPage] = useState<WikiPage | null>(null);
   const [notFound, setNotFound] = useState(false);
 
@@ -20,7 +22,7 @@ export default function WikiViewPage() {
   }, [id, slug]);
 
   const handleDelete = async () => {
-    if (!slug || !confirm('이 문서를 삭제하시겠습니까?')) return;
+    if (!slug || !(await confirm('이 문서를 삭제하시겠습니까?', { title: '문서 삭제', danger: true }))) return;
     await deleteWikiPage(id, slug);
     navigate(`/projects/${id}/wiki`);
   };

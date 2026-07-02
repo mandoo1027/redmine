@@ -27,12 +27,22 @@ public record IssueDto(
         LocalDateTime updatedAt) {
 
     public static IssueDto from(Issue issue) {
+        return build(issue, issue.getDescription());
+    }
+
+    // 목록용: 무거운 description(붙여넣은 base64 이미지 등)을 제외해 응답 크기를 줄인다.
+    // 상세 조회(get)에서만 description 을 포함한다.
+    public static IssueDto summary(Issue issue) {
+        return build(issue, null);
+    }
+
+    private static IssueDto build(Issue issue, String description) {
         return new IssueDto(
                 issue.getId(),
                 issue.getProject().getId(),
                 issue.getProject().getKey(),
                 issue.getSubject(),
-                issue.getDescription(),
+                description,
                 issue.getTracker().name(),
                 issue.getStatus().name(),
                 issue.getPriority().name(),

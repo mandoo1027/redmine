@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { createComment, deleteComment, listComments } from '../../api/comments';
 import type { Comment } from '../../types';
 import { useAuth } from '../../auth/AuthContext';
+import { useDialog } from '../ui/DialogProvider';
+import LoadingOverlay from '../ui/LoadingOverlay';
 
 interface Props {
   issueId: number;
@@ -9,14 +11,20 @@ interface Props {
 
 export default function CommentSection({ issueId }: Props) {
   const { user } = useAuth();
+  const { confirm } = useDialog();
   const isAdmin = user?.role === 'ADMIN';
   const [comments, setComments] = useState<Comment[]>([]);
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const load = () => {
-    listComments(issueId).then(setComments).catch(() => {});
+    setLoading(true);
+    listComments(issueId)
+      .then(setComments)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
   useEffect(load, [issueId]);
@@ -38,7 +46,7 @@ export default function CommentSection({ issueId }: Props) {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('이 댓글을 삭제하시겠습니까?')) return;
+    if (!(await confirm('이 댓글을 삭제하시겠습니까?', { title: '댓글 삭제', danger: true }))) return;
     await deleteComment(id);
     load();
   };
@@ -49,11 +57,13 @@ export default function CommentSection({ issueId }: Props) {
         댓글{comments.length > 0 && <span className="ml-1 text-sm text-gray-400">({comments.length})</span>}
       </h2>
 
-      {comments.length === 0 ? (
-        <p className="mb-4 text-sm text-gray-400">아직 댓글이 없습니다.</p>
-      ) : (
-        <ul className="mb-4 space-y-3">
-          {comments.map((c) => {
+      <div className="relative min-h-[40px]">
+        <LoadingOverlay show={loading} label="불러오는 중..." />
+        {comments.length === 0 ? (
+          <p className="mb-4 text-sm text-gray-400">아직 댓글이 없습니다.</p>
+        ) : (
+          <ul className="mb-4 space-y-3">
+            {comments.map((c) => {
             const canDelete = isAdmin || (user && c.authorId === user.id);
             return (
               <li key={c.id} className="rounded border bg-gray-50 p-3">
@@ -77,8 +87,9 @@ export default function CommentSection({ issueId }: Props) {
               </li>
             );
           })}
-        </ul>
-      )}
+          </ul>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit}>
         {error && <div className="mb-2 rounded bg-red-50 p-2 text-sm text-red-700">{error}</div>}

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import { DialogProvider } from './components/ui/DialogProvider';
 import ProtectedRoute from './auth/ProtectedRoute';
 import AdminRoute from './auth/AdminRoute';
 import Layout from './components/Layout';
@@ -24,6 +25,7 @@ const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
 export default function App() {
   return (
     <AuthProvider>
+      <DialogProvider>
       <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -59,6 +61,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </DialogProvider>
     </AuthProvider>
   );
 }

@@ -7,6 +7,8 @@ import {
   type Attachment,
   type ParentType,
 } from '../../api/attachments';
+import { useDialog } from '../ui/DialogProvider';
+import LoadingOverlay from '../ui/LoadingOverlay';
 
 interface Props {
   parentType: ParentType;
@@ -21,17 +23,21 @@ function formatSize(bytes: number): string {
 }
 
 export default function AttachmentList({ parentType, parentId, editable = true }: Props) {
+  const { confirm } = useDialog();
   const [items, setItems] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => {
+    setLoading(true);
     listAttachments(parentType, parentId)
       .then(setItems)
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
   useEffect(load, [parentType, parentId]);
@@ -74,7 +80,8 @@ export default function AttachmentList({ parentType, parentId, editable = true }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('이 첨부파일을 삭제하시겠습니까?')) return;
+    if (!(await confirm('이 첨부파일을 삭제하시겠습니까?', { title: '첨부파일 삭제', danger: true }))) return;
+    setLoading(true);
     await deleteAttachment(id);
     load();
   };
@@ -129,11 +136,20 @@ export default function AttachmentList({ parentType, parentId, editable = true }
         </div>
       )}
 
-      {items.length === 0 ? (
-        <p className="text-sm text-gray-400">첨부된 파일이 없습니다.</p>
-      ) : (
-        <ul className="divide-y rounded border bg-white text-sm">
-          {items.map((a) => (
+      <div className="relative min-h-[40px]">
+        <LoadingOverlay
+          show={loading || uploading}
+          label={
+            uploading && progress
+              ? `업로드 중 ${progress.done}/${progress.total}`
+              : '불러오는 중...'
+          }
+        />
+        {items.length === 0 ? (
+          <p className="text-sm text-gray-400">첨부된 파일이 없습니다.</p>
+        ) : (
+          <ul className="divide-y rounded border bg-white text-sm">
+            {items.map((a) => (
             <li key={a.id} className="flex items-center justify-between px-3 py-2">
               <div className="flex items-center gap-2">
                 <a
@@ -158,9 +174,10 @@ export default function AttachmentList({ parentType, parentId, editable = true }
                 </button>
               )}
             </li>
-          ))}
-        </ul>
-      )}
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

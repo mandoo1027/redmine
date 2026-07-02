@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { createUser, deleteUser, listUsers, updateUser } from '../api/users';
 import { useAuth } from '../auth/AuthContext';
+import { useDialog } from '../components/ui/DialogProvider';
 import type { Role, User } from '../types';
 
 interface FormState {
@@ -15,6 +16,7 @@ const emptyForm: FormState = { username: '', displayName: '', password: '', role
 
 export default function UsersPage() {
   const { user: me } = useAuth();
+  const { confirm } = useDialog();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -88,7 +90,7 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (u: User) => {
-    if (!window.confirm(`'${u.username}' 계정을 삭제할까요?`)) return;
+    if (!(await confirm(`'${u.username}' 계정을 삭제할까요?`, { title: '계정 삭제', danger: true }))) return;
     setError('');
     try {
       await deleteUser(u.id);
