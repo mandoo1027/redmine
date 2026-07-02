@@ -38,7 +38,8 @@ public class AttachmentController {
     public AttachmentDto upload(@CurrentUser User me,
                                 @RequestParam("file") MultipartFile file,
                                 @RequestParam("parentType") String parentType,
-                                @RequestParam("parentId") Long parentId) {
+                                // 작성 중(부모 엔티티 미저장) 이미지 업로드는 parentId 없이 draft(0)로 저장한다.
+                                @RequestParam(value = "parentId", defaultValue = "0") Long parentId) {
         return attachmentService.upload(parentType, parentId, file, me);
     }
 

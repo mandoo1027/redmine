@@ -5,7 +5,7 @@ import RichTextEditor from '../editor/RichTextEditor';
 import DateField from '../common/DateField';
 import AttachmentList from '../attachments/AttachmentList';
 import PendingAttachments from '../attachments/PendingAttachments';
-import { uploadAttachment, attachmentDownloadUrl, fileToDataUrl } from '../../api/attachments';
+import { uploadAttachment, uploadDraftAttachment, attachmentDownloadUrl } from '../../api/attachments';
 import {
   PRIORITIES,
   PRIORITY_LABELS,
@@ -105,12 +105,12 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
           onChange={setDescription}
           onImageUpload={async (file) => {
             // 기존 이슈 수정 시엔 서버 첨부로 업로드 후 URL 삽입,
-            // 새 이슈 작성 중(ID 없음)엔 base64 data URL 로 본문에 바로 삽입.
-            if (initial?.id) {
-              const att = await uploadAttachment('ISSUE', initial.id, file);
-              return attachmentDownloadUrl(att.id, true);
-            }
-            return fileToDataUrl(file);
+            // 새 이슈 작성 중(ID 없음)엔 draft 첨부로 업로드 후 URL 삽입.
+            // 어느 경우든 base64 를 본문에 넣지 않아 본문이 가벼워진다.
+            const att = initial?.id
+              ? await uploadAttachment('ISSUE', initial.id, file)
+              : await uploadDraftAttachment('ISSUE', file);
+            return attachmentDownloadUrl(att.id, true);
           }}
         />
       </div>
