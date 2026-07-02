@@ -109,12 +109,13 @@ export default function AllIssuesPage() {
               <th className="px-4 py-3">제목</th>
               <th className="px-4 py-3">우선순위</th>
               <th className="px-4 py-3">담당자</th>
+              <th className="px-4 py-3">진행률</th>
             </tr>
           </thead>
           <tbody>
             {issues.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
                   이슈가 없습니다.
                 </td>
               </tr>
@@ -150,6 +151,19 @@ export default function AllIssuesPage() {
                       <PriorityBadge priority={i.priority} />
                     </td>
                     <td className="px-4 py-3 text-gray-600">{i.assigneeName || '-'}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200">
+                          <div
+                            className={`h-full rounded-full ${
+                              i.progress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                            }`}
+                            style={{ width: `${i.progress}%` }}
+                          />
+                        </div>
+                        <span className="w-9 text-right text-xs text-gray-500">{i.progress}%</span>
+                      </div>
+                    </td>
                   </tr>
                 );
               })
