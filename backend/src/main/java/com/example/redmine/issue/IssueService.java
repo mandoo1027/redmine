@@ -4,6 +4,7 @@ import com.example.redmine.attachment.AttachmentService;
 import com.example.redmine.comment.CommentService;
 import com.example.redmine.common.NotFoundException;
 import com.example.redmine.issue.dto.IssueDto;
+import com.example.redmine.issue.dto.IssueLinkDto;
 import com.example.redmine.issue.dto.IssueRequest;
 import com.example.redmine.milestone.Milestone;
 import com.example.redmine.milestone.MilestoneRepository;
@@ -23,6 +24,7 @@ import java.util.List;
 public class IssueService {
 
     private final IssueRepository issueRepository;
+    private final IssueLinkRepository issueLinkRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final MilestoneRepository milestoneRepository;
@@ -31,6 +33,7 @@ public class IssueService {
     private final NotificationService notificationService;
 
     public IssueService(IssueRepository issueRepository,
+                        IssueLinkRepository issueLinkRepository,
                         ProjectRepository projectRepository,
                         UserRepository userRepository,
                         MilestoneRepository milestoneRepository,
@@ -38,6 +41,7 @@ public class IssueService {
                         CommentService commentService,
                         NotificationService notificationService) {
         this.issueRepository = issueRepository;
+        this.issueLinkRepository = issueLinkRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.milestoneRepository = milestoneRepository;
@@ -108,7 +112,48 @@ public class IssueService {
         Issue issue = findIssue(id);
         attachmentService.deleteAllForParent("ISSUE", id);
         commentService.deleteAllForIssue(id);
+        issueLinkRepository.deleteBySourceIdOrTargetId(id, id);
         issueRepository.delete(issue);
+    }
+
+    // ===== 관련 이슈(양방향 링크) =====
+
+    @Transactional(readOnly = true)
+    public List<IssueLinkDto> listLinks(Long issueId) {
+        findIssue(issueId); // 존재 확인
+        return issueLinkRepository.findBySourceIdOrTargetId(issueId, issueId).stream()
+                .map(link -> {
+                    // 나(issueId)의 상대편 이슈를 반환.
+                    Issue other = link.getSource().getId().equals(issueId)
+                            ? link.getTarget() : link.getSource();
+                    return IssueLinkDto.of(link.getId(), other);
+                })
+                .toList();
+    }
+
+    public IssueLinkDto addLink(Long issueId, Long targetId) {
+        if (issueId.equals(targetId)) {
+            throw new IllegalArgumentException("자기 자신은 연결할 수 없습니다.");
+        }
+        Issue source = findIssue(issueId);
+        Issue target = findIssue(targetId);
+        // 이미 어느 방향으로든 연결돼 있으면 기존 링크 반환(중복 방지).
+        if (issueLinkRepository.existsBySourceIdAndTargetId(issueId, targetId)
+                || issueLinkRepository.existsBySourceIdAndTargetId(targetId, issueId)) {
+            return listLinks(issueId).stream()
+                    .filter(l -> l.issueId().equals(targetId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("링크 조회 실패"));
+        }
+        IssueLink saved = issueLinkRepository.save(new IssueLink(source, target));
+        return IssueLinkDto.of(saved.getId(), target);
+    }
+
+    public void deleteLink(Long linkId) {
+        if (!issueLinkRepository.existsById(linkId)) {
+            throw new NotFoundException("Issue link not found: " + linkId);
+        }
+        issueLinkRepository.deleteById(linkId);
     }
 
     private String displayName(User user) {

@@ -1,5 +1,5 @@
 import client from './client';
-import type { Issue, IssueRequest } from '../types';
+import type { Issue, IssueLink, IssueRequest } from '../types';
 
 export interface IssueFilters {
   projectId?: number;
@@ -45,4 +45,20 @@ export async function updateIssue(id: number, payload: IssueRequest): Promise<Is
 
 export async function deleteIssue(id: number): Promise<void> {
   await client.delete(`/issues/${id}`);
+}
+
+// ===== 관련 이슈(양방향 링크) =====
+
+export async function fetchIssueLinks(issueId: number): Promise<IssueLink[]> {
+  const { data } = await client.get<IssueLink[]>(`/issues/${issueId}/links`);
+  return data;
+}
+
+export async function addIssueLink(issueId: number, targetId: number): Promise<IssueLink> {
+  const { data } = await client.post<IssueLink>(`/issues/${issueId}/links`, { targetId });
+  return data;
+}
+
+export async function deleteIssueLink(linkId: number): Promise<void> {
+  await client.delete(`/issues/links/${linkId}`);
 }

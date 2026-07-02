@@ -78,6 +78,15 @@ export interface IssueRequest {
   progress?: number;
 }
 
+export interface IssueLink {
+  linkId: number;
+  issueId: number;
+  projectId: number;
+  subject: string;
+  status: IssueStatus;
+  progress: number;
+}
+
 export interface Milestone {
   id: number;
   projectId: number;

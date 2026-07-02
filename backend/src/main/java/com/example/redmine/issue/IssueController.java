@@ -2,6 +2,7 @@ package com.example.redmine.issue;
 
 import com.example.redmine.auth.CurrentUser;
 import com.example.redmine.issue.dto.IssueDto;
+import com.example.redmine.issue.dto.IssueLinkDto;
 import com.example.redmine.issue.dto.IssueRequest;
 import com.example.redmine.user.User;
 import jakarta.validation.Valid;
@@ -66,5 +67,27 @@ public class IssueController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         issueService.delete(id);
+    }
+
+    // ===== 관련 이슈(양방향 링크) =====
+
+    @GetMapping("/api/issues/{id}/links")
+    public List<IssueLinkDto> listLinks(@PathVariable Long id) {
+        return issueService.listLinks(id);
+    }
+
+    @PostMapping("/api/issues/{id}/links")
+    @ResponseStatus(HttpStatus.CREATED)
+    public IssueLinkDto addLink(@PathVariable Long id, @RequestBody LinkRequest request) {
+        return issueService.addLink(id, request.targetId());
+    }
+
+    @DeleteMapping("/api/issues/links/{linkId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteLink(@PathVariable Long linkId) {
+        issueService.deleteLink(linkId);
+    }
+
+    public record LinkRequest(Long targetId) {
     }
 }

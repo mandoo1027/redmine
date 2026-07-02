@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteIssue, fetchIssue, updateIssue } from '../api/issues';
+import { createIssue, deleteIssue, fetchIssue, updateIssue } from '../api/issues';
 import type { Issue, IssueRequest } from '../types';
 import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/StatusBadge';
@@ -8,6 +8,7 @@ import RichTextView from '../components/editor/RichTextView';
 import RichTextEditor from '../components/editor/RichTextEditor';
 import AttachmentList from '../components/attachments/AttachmentList';
 import CommentSection from '../components/issues/CommentSection';
+import RelatedIssues from '../components/issues/RelatedIssues';
 import { useDialog } from '../components/ui/DialogProvider';
 import { uploadAttachment, attachmentDownloadUrl } from '../api/attachments';
 
@@ -19,6 +20,8 @@ export default function IssueDetailPage() {
   const { confirm } = useDialog();
   const [issue, setIssue] = useState<Issue | null>(null);
   const [editing, setEditing] = useState(false);
+  // 복사 모드: 기존 값이 채워진 폼을 새 이슈로 등록.
+  const [copying, setCopying] = useState(false);
   // 해결 내용만 인라인으로 편집하기 위한 상태.
   const [editingResolution, setEditingResolution] = useState(false);
   const [resolutionDraft, setResolutionDraft] = useState('');
@@ -34,6 +37,14 @@ export default function IssueDetailPage() {
     await updateIssue(iid, payload);
     setEditing(false);
     load();
+  };
+
+  // 복사: 폼에서 확인/수정한 값으로 새 이슈를 생성하고 그 상세로 이동.
+  const handleCopy = async (payload: IssueRequest) => {
+    const created = await createIssue(payload);
+    setCopying(false);
+    navigate(`/projects/${created.projectId}/issues/${created.id}`);
+    return created;
   };
 
   // 제목·설명 등 다른 필드는 그대로 두고 해결 내용만 저장한다.
@@ -86,6 +97,25 @@ export default function IssueDetailPage() {
     );
   }
 
+  if (copying) {
+    // id 를 제거해 새 이슈로 취급하고, 제목 앞에 [복사] 표기.
+    const { id: _omit, ...rest } = issue;
+    const copyInitial = { ...rest, subject: `[복사] ${issue.subject}` } as Issue;
+    return (
+      <div>
+        <div className="mb-3 rounded bg-blue-50 p-3 text-sm text-blue-700">
+          #{issue.id} 이슈를 복사해 새 이슈를 만듭니다. 내용을 확인하고 저장하세요.
+        </div>
+        <IssueForm
+          projectId={pid}
+          initial={copyInitial}
+          onSubmit={handleCopy}
+          onCancel={() => setCopying(false)}
+        />
+      </div>
+    );
+  }
+
   const row = (label: string, value: React.ReactNode) => (
     <div className="flex border-b py-2 text-sm last:border-0">
       <div className="w-28 text-gray-500">{label}</div>
@@ -109,6 +139,12 @@ export default function IssueDetailPage() {
             className="rounded border px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
           >
             수정
+          </button>
+          <button
+            onClick={() => setCopying(true)}
+            className="rounded border px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            복사
           </button>
           <button
             onClick={handleDelete}
@@ -185,6 +221,10 @@ export default function IssueDetailPage() {
         ) : (
           <p className="text-sm text-green-700/70">아직 해결 내용이 없습니다.</p>
         )}
+      </div>
+
+      <div className="mb-6 border-t pt-4">
+        <RelatedIssues issueId={issue.id} />
       </div>
 
       <div className="border-t pt-4">
