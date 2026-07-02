@@ -31,4 +31,45 @@ public final class IssueSpecifications {
         return (root, query, cb) ->
                 assigneeId == null ? null : cb.equal(root.get("assignee").get("id"), assigneeId);
     }
+
+    // 제목(subject)에 keyword 포함 (대소문자 무시)
+    public static Specification<Issue> subjectLike(String keyword) {
+        return (root, query, cb) -> {
+            if (keyword == null || keyword.isBlank()) {
+                return null;
+            }
+            return cb.like(cb.lower(root.get("subject")), pattern(keyword));
+        };
+    }
+
+    // 텍스트(제목 또는 설명)에 keyword 포함 (대소문자 무시)
+    public static Specification<Issue> textLike(String keyword) {
+        return (root, query, cb) -> {
+            if (keyword == null || keyword.isBlank()) {
+                return null;
+            }
+            String p = pattern(keyword);
+            return cb.or(
+                    cb.like(cb.lower(root.get("subject")), p),
+                    cb.like(cb.lower(root.get("description")), p));
+        };
+    }
+
+    // 담당자 이름(displayName 또는 username)에 keyword 포함 (대소문자 무시)
+    public static Specification<Issue> assigneeNameLike(String keyword) {
+        return (root, query, cb) -> {
+            if (keyword == null || keyword.isBlank()) {
+                return null;
+            }
+            String p = pattern(keyword);
+            var assignee = root.join("assignee", jakarta.persistence.criteria.JoinType.LEFT);
+            return cb.or(
+                    cb.like(cb.lower(assignee.get("displayName")), p),
+                    cb.like(cb.lower(assignee.get("username")), p));
+        };
+    }
+
+    private static String pattern(String keyword) {
+        return "%" + keyword.trim().toLowerCase() + "%";
+    }
 }

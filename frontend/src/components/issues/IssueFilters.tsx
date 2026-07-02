@@ -16,6 +16,7 @@ interface Props {
 
 export default function IssueFilters({ filters, onChange }: Props) {
   const select = 'rounded border px-2 py-1 text-sm';
+  const input = 'rounded border px-2 py-1 text-sm';
   const { user } = useAuth();
   // 현재 담당자 필터가 내 계정으로 지정되어 있으면 "내 것만 보기" 체크 상태.
   const mineOnly = user != null && filters.assigneeId === user.id;
@@ -63,6 +64,27 @@ export default function IssueFilters({ filters, onChange }: Props) {
           </option>
         ))}
       </select>
+      <input
+        type="text"
+        className={input}
+        placeholder="제목 검색"
+        value={filters.subject || ''}
+        onChange={(e) => onChange({ ...filters, subject: e.target.value || undefined })}
+      />
+      <input
+        type="text"
+        className={input}
+        placeholder="텍스트 검색(제목·내용)"
+        value={filters.text || ''}
+        onChange={(e) => onChange({ ...filters, text: e.target.value || undefined })}
+      />
+      <input
+        type="text"
+        className={input}
+        placeholder="담당자 이름 검색"
+        value={filters.assigneeName || ''}
+        onChange={(e) => onChange({ ...filters, assigneeName: e.target.value || undefined })}
+      />
       {user && (
         <label className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600">
           <input

@@ -7,6 +7,9 @@ export interface IssueFilters {
   priority?: string;
   tracker?: string;
   assigneeId?: number;
+  subject?: string;
+  text?: string;
+  assigneeName?: string;
 }
 
 export async function fetchIssues(filters: IssueFilters = {}): Promise<Issue[]> {
