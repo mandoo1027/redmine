@@ -171,6 +171,22 @@ export default function RichTextEditor({ value, onChange, onImageUpload, placeho
   const imageFilesFrom = (list?: FileList | null) =>
     Array.from(list || []).filter((f) => f.type.startsWith('image/'));
 
+  // 클립보드에서 이미지 파일을 추출한다. 파일 탐색기에서 복사한 경우는 files 에,
+  // 캡처 도구/이미지 뷰어에서 이미지 자체를 복사한 경우는 items 에 들어오므로 둘 다 확인.
+  const clipboardImageFiles = (data?: DataTransfer | null): File[] => {
+    if (!data) return [];
+    const fromFiles = imageFilesFrom(data.files);
+    if (fromFiles.length > 0) return fromFiles;
+    const fromItems: File[] = [];
+    for (const item of Array.from(data.items || [])) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const f = item.getAsFile();
+        if (f) fromItems.push(f);
+      }
+    }
+    return fromItems;
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -194,8 +210,9 @@ export default function RichTextEditor({ value, onChange, onImageUpload, placeho
         return true;
       },
       // 클립보드 이미지를 붙여넣으면(Ctrl+V) 업로드 후 삽입.
+      // 복사한 이미지(스크린샷/이미지 뷰어)와 복사한 이미지 파일 모두 처리.
       handlePaste: (_view, event) => {
-        const files = imageFilesFrom((event as ClipboardEvent).clipboardData?.files);
+        const files = clipboardImageFiles((event as ClipboardEvent).clipboardData);
         if (files.length === 0 || !uploadRef.current) return false;
         event.preventDefault();
         files.forEach((f) => insertImageFile(f));
