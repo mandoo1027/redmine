@@ -5,12 +5,15 @@ import type { Issue, IssueRequest } from '../types';
 import IssueFilters from '../components/issues/IssueFilters';
 import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/StatusBadge';
+import { useAuth } from '../auth/AuthContext';
 
 export default function IssuesPage() {
+  const { user } = useAuth();
   const { projectId } = useParams();
   const id = Number(projectId);
   const [issues, setIssues] = useState<Issue[]>([]);
-  const [filters, setFilters] = useState<Filters>({});
+  // 진입 시 기본으로 "내 것만 보기" 체크 상태로 시작 (로그인 사용자 담당 이슈).
+  const [filters, setFilters] = useState<Filters>(() => (user ? { assigneeId: user.id } : {}));
   const [showForm, setShowForm] = useState(false);
 
   const load = () => {
