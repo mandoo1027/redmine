@@ -7,6 +7,7 @@ import {
   TRACKER_LABELS,
 } from '../../types';
 import type { IssueFilters as Filters } from '../../api/issues';
+import { useAuth } from '../../auth/AuthContext';
 
 interface Props {
   filters: Filters;
@@ -15,6 +16,14 @@ interface Props {
 
 export default function IssueFilters({ filters, onChange }: Props) {
   const select = 'rounded border px-2 py-1 text-sm';
+  const { user } = useAuth();
+  // 현재 담당자 필터가 내 계정으로 지정되어 있으면 "내 것만 보기" 체크 상태.
+  const mineOnly = user != null && filters.assigneeId === user.id;
+
+  const toggleMine = (checked: boolean) => {
+    if (!user) return;
+    onChange({ ...filters, assigneeId: checked ? user.id : undefined });
+  };
 
   return (
     <div className="mb-4 flex flex-wrap gap-3">
@@ -54,6 +63,17 @@ export default function IssueFilters({ filters, onChange }: Props) {
           </option>
         ))}
       </select>
+      {user && (
+        <label className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            className="h-4 w-4"
+            checked={mineOnly}
+            onChange={(e) => toggleMine(e.target.checked)}
+          />
+          내 것만 보기
+        </label>
+      )}
     </div>
   );
 }
