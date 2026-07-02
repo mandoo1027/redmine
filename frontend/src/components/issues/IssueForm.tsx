@@ -30,6 +30,7 @@ interface Props {
 export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Props) {
   const [subject, setSubject] = useState(initial?.subject || '');
   const [description, setDescription] = useState(initial?.description || '');
+  const [resolution, setResolution] = useState(initial?.resolution || '');
   const [tracker, setTracker] = useState(initial?.tracker || 'TASK');
   const [status, setStatus] = useState(initial?.status || 'OPEN');
   const [priority, setPriority] = useState(initial?.priority || 'NORMAL');
@@ -61,6 +62,7 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
         projectId,
         subject,
         description,
+        resolution,
         tracker: tracker as IssueRequest['tracker'],
         status: status as IssueRequest['status'],
         priority: priority as IssueRequest['priority'],
@@ -107,6 +109,20 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
             // 기존 이슈 수정 시엔 서버 첨부로 업로드 후 URL 삽입,
             // 새 이슈 작성 중(ID 없음)엔 draft 첨부로 업로드 후 URL 삽입.
             // 어느 경우든 base64 를 본문에 넣지 않아 본문이 가벼워진다.
+            const att = initial?.id
+              ? await uploadAttachment('ISSUE', initial.id, file)
+              : await uploadDraftAttachment('ISSUE', file);
+            return attachmentDownloadUrl(att.id, true);
+          }}
+        />
+      </div>
+      <div className="mb-4">
+        <label className={label}>해결 내용</label>
+        <RichTextEditor
+          value={resolution}
+          onChange={setResolution}
+          placeholder="이슈 해결 내용을 입력하세요"
+          onImageUpload={async (file) => {
             const att = initial?.id
               ? await uploadAttachment('ISSUE', initial.id, file)
               : await uploadDraftAttachment('ISSUE', file);

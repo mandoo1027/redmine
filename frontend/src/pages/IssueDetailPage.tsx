@@ -102,6 +102,13 @@ export default function IssueDetailPage() {
         )}
       </div>
 
+      {issue.resolution && (
+        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
+          <h2 className="mb-2 font-semibold text-green-800">해결 내용</h2>
+          <RichTextView content={issue.resolution} />
+        </div>
+      )}
+
       <div className="border-t pt-4">
         <AttachmentList parentType="ISSUE" parentId={issue.id} />
       </div>

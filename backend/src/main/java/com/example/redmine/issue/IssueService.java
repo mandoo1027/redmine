@@ -116,6 +116,7 @@ public class IssueService {
 
     private void applyRequest(Issue issue, IssueRequest request) {
         issue.setDescription(request.description());
+        issue.setResolution(request.resolution());
         if (request.tracker() != null) {
             issue.setTracker(TrackerType.valueOf(request.tracker()));
         }

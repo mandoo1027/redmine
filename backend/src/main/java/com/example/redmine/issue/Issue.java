@@ -29,6 +29,10 @@ public class Issue extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    // 해결 내용: 담당자 등이 이슈를 해결하며 남기는 답변. 기존 행은 null 허용.
+    @Column(columnDefinition = "TEXT")
+    private String resolution;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TrackerType tracker = TrackerType.TASK;
@@ -89,6 +93,14 @@ public class Issue extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getResolution() {
+        return resolution;
+    }
+
+    public void setResolution(String resolution) {
+        this.resolution = resolution;
     }
 
     public TrackerType getTracker() {

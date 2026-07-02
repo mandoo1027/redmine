@@ -9,6 +9,7 @@ public record IssueRequest(
         @NotNull Long projectId,
         @NotBlank String subject,
         String description,
+        String resolution,
         String tracker,
         String status,
         String priority,

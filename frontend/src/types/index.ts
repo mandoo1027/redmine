@@ -46,6 +46,7 @@ export interface Issue {
   projectKey: string;
   subject: string;
   description: string | null;
+  resolution: string | null;
   tracker: TrackerType;
   status: IssueStatus;
   priority: IssuePriority;
@@ -66,6 +67,7 @@ export interface IssueRequest {
   projectId: number;
   subject: string;
   description?: string | null;
+  resolution?: string | null;
   tracker?: TrackerType;
   status?: IssueStatus;
   priority?: IssuePriority;
