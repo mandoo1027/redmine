@@ -4,7 +4,15 @@ import { PRIORITY_LABELS, STATUS_LABELS, TRACKER_LABELS } from '../../types';
 const statusColors: Record<IssueStatus, string> = {
   OPEN: 'bg-green-100 text-green-800',
   IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-  CLOSED: 'bg-gray-200 text-gray-600',
+  // 완료(종료)는 확실히 구분되도록 진한 배지 + 체크 표시.
+  CLOSED: 'bg-gray-700 text-white',
+};
+
+// 상태별 앞에 붙는 아이콘/기호. 완료는 체크로 종료를 명확히 표시.
+const statusPrefix: Record<IssueStatus, string> = {
+  OPEN: '',
+  IN_PROGRESS: '',
+  CLOSED: '✓ ',
 };
 
 const priorityColors: Record<IssuePriority, string> = {
@@ -30,7 +38,8 @@ function Badge({ text, className }: { text: string; className: string }) {
 }
 
 export function StatusBadge({ status }: { status: IssueStatus }) {
-  return <Badge text={STATUS_LABELS[status]} className={statusColors[status]} />;
+  const label = status === 'CLOSED' ? '완료 (종료)' : STATUS_LABELS[status];
+  return <Badge text={statusPrefix[status] + label} className={statusColors[status]} />;
 }
 
 export function PriorityBadge({ priority }: { priority: IssuePriority }) {

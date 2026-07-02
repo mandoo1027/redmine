@@ -99,11 +99,11 @@ export default function AllIssuesPage() {
         <table className="w-full text-sm">
           <thead className="border-b bg-gray-50 text-left text-gray-500">
             <tr>
+              <th className="px-4 py-3">상태</th>
               <th className="px-4 py-3">#</th>
               <th className="px-4 py-3">프로젝트</th>
               <th className="px-4 py-3">유형</th>
               <th className="px-4 py-3">제목</th>
-              <th className="px-4 py-3">상태</th>
               <th className="px-4 py-3">우선순위</th>
               <th className="px-4 py-3">담당자</th>
             </tr>
@@ -116,30 +116,40 @@ export default function AllIssuesPage() {
                 </td>
               </tr>
             ) : (
-              issues.map((i) => (
-                <tr key={i.id} className="border-b last:border-0 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-400">#{i.id}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{i.projectKey}</td>
-                  <td className="px-4 py-3">
-                    <TrackerBadge tracker={i.tracker} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`/projects/${i.projectId}/issues/${i.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {i.subject}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={i.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <PriorityBadge priority={i.priority} />
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{i.assigneeName || '-'}</td>
-                </tr>
-              ))
+              issues.map((i) => {
+                const closed = i.status === 'CLOSED';
+                return (
+                  <tr
+                    key={i.id}
+                    className={`border-b last:border-0 hover:bg-gray-50 ${
+                      closed ? 'bg-gray-50 text-gray-400' : ''
+                    }`}
+                  >
+                    <td className="px-4 py-3">
+                      <StatusBadge status={i.status} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">#{i.id}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500">{i.projectKey}</td>
+                    <td className="px-4 py-3">
+                      <TrackerBadge tracker={i.tracker} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/projects/${i.projectId}/issues/${i.id}`}
+                        className={`hover:underline ${
+                          closed ? 'text-gray-500 line-through' : 'text-blue-600'
+                        }`}
+                      >
+                        {i.subject}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <PriorityBadge priority={i.priority} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{i.assigneeName || '-'}</td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
