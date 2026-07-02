@@ -54,12 +54,12 @@ export default function IssuesPage() {
           <thead className="border-b bg-gray-50 text-left text-gray-500">
             <tr>
               <th className="px-4 py-3">상태</th>
+              <th className="px-4 py-3">진행률</th>
               <th className="px-4 py-3">#</th>
               <th className="px-4 py-3">유형</th>
               <th className="px-4 py-3">제목</th>
               <th className="px-4 py-3">우선순위</th>
               <th className="px-4 py-3">담당자</th>
-              <th className="px-4 py-3">진행률</th>
               <th className="px-4 py-3">마감일</th>
             </tr>
           </thead>
@@ -83,6 +83,19 @@ export default function IssuesPage() {
                     <td className="px-4 py-3">
                       <StatusBadge status={i.status} />
                     </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200">
+                          <div
+                            className={`h-full rounded-full ${
+                              i.progress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                            }`}
+                            style={{ width: `${i.progress}%` }}
+                          />
+                        </div>
+                        <span className="w-9 text-right text-xs text-gray-500">{i.progress}%</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-gray-400">#{i.id}</td>
                     <td className="px-4 py-3">
                       <TrackerBadge tracker={i.tracker} />
@@ -101,19 +114,6 @@ export default function IssuesPage() {
                       <PriorityBadge priority={i.priority} />
                     </td>
                     <td className="px-4 py-3 text-gray-600">{i.assigneeName || '-'}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200">
-                          <div
-                            className={`h-full rounded-full ${
-                              i.progress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-                            }`}
-                            style={{ width: `${i.progress}%` }}
-                          />
-                        </div>
-                        <span className="w-9 text-right text-xs text-gray-500">{i.progress}%</span>
-                      </div>
-                    </td>
                     <td className="px-4 py-3 text-gray-500">{i.dueDate || '-'}</td>
                   </tr>
                 );
