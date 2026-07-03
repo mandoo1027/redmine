@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -63,6 +64,12 @@ public class IssueController {
         return issueService.update(id, request, me);
     }
 
+    // 목록에서 상태만 가볍게 변경.
+    @PatchMapping("/api/issues/{id}/status")
+    public IssueDto updateStatus(@PathVariable Long id, @RequestBody StatusRequest request) {
+        return issueService.updateStatus(id, request.status());
+    }
+
     @DeleteMapping("/api/issues/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
@@ -89,5 +96,8 @@ public class IssueController {
     }
 
     public record LinkRequest(Long targetId) {
+    }
+
+    public record StatusRequest(IssueStatus status) {
     }
 }

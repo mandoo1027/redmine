@@ -47,6 +47,12 @@ export async function deleteIssue(id: number): Promise<void> {
   await client.delete(`/issues/${id}`);
 }
 
+// 목록에서 상태만 가볍게 변경 (다른 필드는 서버에서 그대로 유지).
+export async function updateIssueStatus(id: number, status: string): Promise<Issue> {
+  const { data } = await client.patch<Issue>(`/issues/${id}/status`, { status });
+  return data;
+}
+
 // ===== 관련 이슈(양방향 링크) =====
 
 export async function fetchIssueLinks(issueId: number): Promise<IssueLink[]> {

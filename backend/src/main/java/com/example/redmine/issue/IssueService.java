@@ -108,6 +108,13 @@ public class IssueService {
         return IssueDto.from(issue);
     }
 
+    // 목록에서 상태만 가볍게 변경 (설명·해결내용 등 다른 필드는 그대로 유지).
+    public IssueDto updateStatus(Long id, IssueStatus status) {
+        Issue issue = findIssue(id);
+        issue.setStatus(status);
+        return IssueDto.from(issue);
+    }
+
     public void delete(Long id) {
         Issue issue = findIssue(id);
         attachmentService.deleteAllForParent("ISSUE", id);
@@ -192,7 +199,10 @@ public class IssueService {
         issue.setStartDate(request.startDate());
         issue.setDueDate(request.dueDate());
         if (request.progress() != null) {
-            issue.setProgress(Math.max(0, Math.min(100, request.progress())));
+            int progress = Math.max(0, Math.min(100, request.progress()));
+            issue.setProgress(progress);
+            // 진행률 변경 시 상태 자동 전환: 100% → 완료(CLOSED), 그 외 → 진행중(IN_PROGRESS).
+            issue.setStatus(progress >= 100 ? IssueStatus.CLOSED : IssueStatus.IN_PROGRESS);
         }
     }
 

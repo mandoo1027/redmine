@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { createIssue, fetchIssues, type IssueFilters as Filters } from '../api/issues';
-import type { Issue, IssueRequest } from '../types';
+import { createIssue, fetchIssues, updateIssueStatus, type IssueFilters as Filters } from '../api/issues';
+import type { Issue, IssueRequest, IssueStatus } from '../types';
+import { STATUSES, STATUS_LABELS } from '../types';
 import IssueFilters from '../components/issues/IssueFilters';
 import IssueForm from '../components/issues/IssueForm';
-import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/StatusBadge';
+import { PriorityBadge, TrackerBadge } from '../components/issues/StatusBadge';
 import { useAuth } from '../auth/AuthContext';
 
 export default function IssuesPage() {
@@ -27,6 +28,16 @@ export default function IssuesPage() {
     setShowForm(false);
     load();
     return created;
+  };
+
+  // 목록에서 상태만 즉시 변경 (설명·해결내용 등은 서버에서 그대로 유지).
+  const handleStatusChange = async (issueId: number, status: IssueStatus) => {
+    setIssues((prev) => prev.map((i) => (i.id === issueId ? { ...i, status } : i)));
+    try {
+      await updateIssueStatus(issueId, status);
+    } catch {
+      load();
+    }
   };
 
   return (
@@ -81,7 +92,23 @@ export default function IssuesPage() {
                     }`}
                   >
                     <td className="px-4 py-3">
-                      <StatusBadge status={i.status} />
+                      <select
+                        value={i.status}
+                        onChange={(e) => handleStatusChange(i.id, e.target.value as IssueStatus)}
+                        className={`rounded border px-2 py-1 text-xs font-medium focus:outline-none ${
+                          i.status === 'CLOSED'
+                            ? 'border-green-200 bg-green-50 text-green-700'
+                            : i.status === 'IN_PROGRESS'
+                            ? 'border-blue-200 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        {STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {STATUS_LABELS[s]}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
