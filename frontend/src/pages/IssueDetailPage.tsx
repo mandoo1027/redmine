@@ -26,6 +26,9 @@ export default function IssueDetailPage() {
   const [editingResolution, setEditingResolution] = useState(false);
   const [resolutionDraft, setResolutionDraft] = useState('');
   const [savingResolution, setSavingResolution] = useState(false);
+  // 진행률만 인라인으로 편집하기 위한 상태.
+  const [progressDraft, setProgressDraft] = useState<number | null>(null);
+  const [savingProgress, setSavingProgress] = useState(false);
 
   const load = () => {
     fetchIssue(iid).then(setIssue).catch(() => {});
@@ -75,6 +78,32 @@ export default function IssueDetailPage() {
       load();
     } finally {
       setSavingResolution(false);
+    }
+  };
+
+  // 진행률만 인라인으로 저장 (다른 필드는 그대로 유지).
+  const saveProgress = async (value: number) => {
+    if (!issue) return;
+    setSavingProgress(true);
+    try {
+      await updateIssue(iid, {
+        projectId: issue.projectId,
+        subject: issue.subject,
+        description: issue.description,
+        resolution: issue.resolution,
+        tracker: issue.tracker,
+        status: issue.status,
+        priority: issue.priority,
+        assigneeId: issue.assigneeId,
+        milestoneId: issue.milestoneId,
+        startDate: issue.startDate,
+        dueDate: issue.dueDate,
+        progress: value,
+      });
+      setProgressDraft(null);
+      load();
+    } finally {
+      setSavingProgress(false);
     }
   };
 
@@ -163,7 +192,55 @@ export default function IssueDetailPage() {
         {row('마일스톤', issue.milestoneName || '없음')}
         {row('시작일', issue.startDate || '-')}
         {row('마감일', issue.dueDate || '-')}
-        {row('진행률', `${issue.progress}%`)}
+        {row(
+          '진행률',
+          progressDraft === null ? (
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-32 overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className={`h-full rounded-full ${
+                    issue.progress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                  }`}
+                  style={{ width: `${issue.progress}%` }}
+                />
+              </div>
+              <span className="w-10 text-right text-gray-700">{issue.progress}%</span>
+              <button
+                onClick={() => setProgressDraft(issue.progress)}
+                className="rounded border px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-100"
+              >
+                변경
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={progressDraft}
+                onChange={(e) => setProgressDraft(Number(e.target.value))}
+                className="w-40"
+              />
+              <span className="w-10 text-right text-gray-700">{progressDraft}%</span>
+              <button
+                onClick={() => saveProgress(progressDraft)}
+                disabled={savingProgress}
+                className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {savingProgress ? '저장 중...' : '저장'}
+              </button>
+              <button
+                onClick={() => setProgressDraft(null)}
+                disabled={savingProgress}
+                className="rounded border px-3 py-1 text-xs text-gray-700 hover:bg-gray-100"
+              >
+                취소
+              </button>
+            </div>
+          )
+        )}
       </div>
 
       <div className="mb-6">
