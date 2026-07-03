@@ -15,7 +15,7 @@ public class CorsConfig implements WebMvcConfigurer {
                         "http://127.0.0.1:*",
                         "https://mandoo1027.duckdns.org",
                         "https://mandoo1027.tplinkdns.com")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
