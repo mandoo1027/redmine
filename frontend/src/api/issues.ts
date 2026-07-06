@@ -10,6 +10,8 @@ export interface IssueFilters {
   subject?: string;
   text?: string;
   assigneeName?: string;
+  reviewerId?: number;
+  reviewerName?: string;
 }
 
 export async function fetchIssues(filters: IssueFilters = {}): Promise<Issue[]> {

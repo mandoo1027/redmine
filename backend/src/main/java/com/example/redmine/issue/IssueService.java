@@ -53,7 +53,8 @@ public class IssueService {
     @Transactional(readOnly = true)
     public List<IssueDto> list(Long projectId, IssueStatus status, IssuePriority priority,
                                TrackerType tracker, Long assigneeId,
-                               String subject, String text, String assigneeName) {
+                               String subject, String text, String assigneeName,
+                               Long reviewerId, String reviewerName) {
         Specification<Issue> spec = Specification
                 .where(IssueSpecifications.projectId(projectId))
                 .and(IssueSpecifications.status(status))
@@ -62,7 +63,9 @@ public class IssueService {
                 .and(IssueSpecifications.assigneeId(assigneeId))
                 .and(IssueSpecifications.subjectLike(subject))
                 .and(IssueSpecifications.textLike(text))
-                .and(IssueSpecifications.assigneeNameLike(assigneeName));
+                .and(IssueSpecifications.assigneeNameLike(assigneeName))
+                .and(IssueSpecifications.reviewerId(reviewerId))
+                .and(IssueSpecifications.reviewerNameLike(reviewerName));
         return issueRepository.findAll(spec).stream().map(IssueDto::summary).toList();
     }
 

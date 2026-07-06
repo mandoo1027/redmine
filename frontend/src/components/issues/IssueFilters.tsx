@@ -20,10 +20,17 @@ export default function IssueFilters({ filters, onChange }: Props) {
   const { user } = useAuth();
   // 현재 담당자 필터가 내 계정으로 지정되어 있으면 "내 것만 보기" 체크 상태.
   const mineOnly = user != null && filters.assigneeId === user.id;
+  // 검수 담당자 필터가 내 계정으로 지정되어 있으면 "검수 내 것만 보기" 체크 상태.
+  const reviewMineOnly = user != null && filters.reviewerId === user.id;
 
   const toggleMine = (checked: boolean) => {
     if (!user) return;
     onChange({ ...filters, assigneeId: checked ? user.id : undefined });
+  };
+
+  const toggleReviewMine = (checked: boolean) => {
+    if (!user) return;
+    onChange({ ...filters, reviewerId: checked ? user.id : undefined });
   };
 
   return (
@@ -85,6 +92,13 @@ export default function IssueFilters({ filters, onChange }: Props) {
         value={filters.assigneeName || ''}
         onChange={(e) => onChange({ ...filters, assigneeName: e.target.value || undefined })}
       />
+      <input
+        type="text"
+        className={input}
+        placeholder="검수 담당자 이름 검색"
+        value={filters.reviewerName || ''}
+        onChange={(e) => onChange({ ...filters, reviewerName: e.target.value || undefined })}
+      />
       {user && (
         <label className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600">
           <input
@@ -94,6 +108,17 @@ export default function IssueFilters({ filters, onChange }: Props) {
             onChange={(e) => toggleMine(e.target.checked)}
           />
           내 것만 보기
+        </label>
+      )}
+      {user && (
+        <label className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            className="h-4 w-4"
+            checked={reviewMineOnly}
+            onChange={(e) => toggleReviewMine(e.target.checked)}
+          />
+          검수 내 것만 보기
         </label>
       )}
     </div>

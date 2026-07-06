@@ -38,9 +38,11 @@ public class IssueController {
             @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) String subject,
             @RequestParam(required = false) String text,
-            @RequestParam(required = false) String assigneeName) {
+            @RequestParam(required = false) String assigneeName,
+            @RequestParam(required = false) Long reviewerId,
+            @RequestParam(required = false) String reviewerName) {
         return issueService.list(projectId, status, priority, tracker, assigneeId,
-                subject, text, assigneeName);
+                subject, text, assigneeName, reviewerId, reviewerName);
     }
 
     @GetMapping("/api/projects/{projectId}/issues")

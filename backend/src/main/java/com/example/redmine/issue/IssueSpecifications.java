@@ -32,6 +32,25 @@ public final class IssueSpecifications {
                 assigneeId == null ? null : cb.equal(root.get("assignee").get("id"), assigneeId);
     }
 
+    public static Specification<Issue> reviewerId(Long reviewerId) {
+        return (root, query, cb) ->
+                reviewerId == null ? null : cb.equal(root.get("reviewer").get("id"), reviewerId);
+    }
+
+    // 검수 담당자 이름(displayName 또는 username)에 keyword 포함 (대소문자 무시)
+    public static Specification<Issue> reviewerNameLike(String keyword) {
+        return (root, query, cb) -> {
+            if (keyword == null || keyword.isBlank()) {
+                return null;
+            }
+            String p = pattern(keyword);
+            var reviewer = root.join("reviewer", jakarta.persistence.criteria.JoinType.LEFT);
+            return cb.or(
+                    cb.like(cb.lower(reviewer.get("displayName")), p),
+                    cb.like(cb.lower(reviewer.get("username")), p));
+        };
+    }
+
     // 제목(subject)에 keyword 포함 (대소문자 무시)
     public static Specification<Issue> subjectLike(String keyword) {
         return (root, query, cb) -> {
