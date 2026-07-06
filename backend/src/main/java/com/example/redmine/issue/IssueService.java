@@ -196,6 +196,14 @@ public class IssueService {
         } else {
             issue.setMilestone(null);
         }
+        if (request.reviewerId() != null) {
+            User reviewer = userRepository.findById(request.reviewerId())
+                    .orElseThrow(() -> new NotFoundException("User not found: " + request.reviewerId()));
+            issue.setReviewer(reviewer);
+        } else {
+            issue.setReviewer(null);
+        }
+        issue.setReviewedDate(request.reviewedDate());
         issue.setStartDate(request.startDate());
         issue.setDueDate(request.dueDate());
         if (request.progress() != null) {

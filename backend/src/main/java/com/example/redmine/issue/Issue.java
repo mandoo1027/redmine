@@ -58,6 +58,15 @@ public class Issue extends BaseEntity {
     @JoinColumn(name = "milestone_id")
     private Milestone milestone;
 
+    // 검수 담당자: 이슈 검수(리뷰)를 맡은 사용자. 기존 행은 null 허용.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewer_id")
+    private User reviewer;
+
+    // 검수 일자: 값이 있으면 검수 완료(예), 없으면 미검수(아니요)로 판단.
+    @Column(name = "reviewed_date")
+    private LocalDate reviewedDate;
+
     @Column(name = "start_date")
     private LocalDate startDate;
 
@@ -149,6 +158,22 @@ public class Issue extends BaseEntity {
 
     public void setMilestone(Milestone milestone) {
         this.milestone = milestone;
+    }
+
+    public User getReviewer() {
+        return reviewer;
+    }
+
+    public void setReviewer(User reviewer) {
+        this.reviewer = reviewer;
+    }
+
+    public LocalDate getReviewedDate() {
+        return reviewedDate;
+    }
+
+    public void setReviewedDate(LocalDate reviewedDate) {
+        this.reviewedDate = reviewedDate;
     }
 
     public LocalDate getStartDate() {

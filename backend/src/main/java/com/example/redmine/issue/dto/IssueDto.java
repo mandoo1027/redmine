@@ -21,6 +21,10 @@ public record IssueDto(
         String reporterName,
         Long milestoneId,
         String milestoneName,
+        Long reviewerId,
+        String reviewerName,
+        LocalDate reviewedDate,
+        boolean reviewed,
         LocalDate startDate,
         LocalDate dueDate,
         Integer progress,
@@ -62,6 +66,15 @@ public record IssueDto(
                         : null,
                 issue.getMilestone() != null ? issue.getMilestone().getId() : null,
                 issue.getMilestone() != null ? issue.getMilestone().getName() : null,
+                issue.getReviewer() != null ? issue.getReviewer().getId() : null,
+                issue.getReviewer() != null
+                        ? (issue.getReviewer().getDisplayName() != null
+                            ? issue.getReviewer().getDisplayName()
+                            : issue.getReviewer().getUsername())
+                        : null,
+                issue.getReviewedDate(),
+                // 검수 여부: 검수 일자가 있으면 검수 완료(true).
+                issue.getReviewedDate() != null,
                 issue.getStartDate(),
                 issue.getDueDate(),
                 issue.getProgress(),

@@ -15,6 +15,8 @@ public record IssueRequest(
         String priority,
         Long assigneeId,
         Long milestoneId,
+        Long reviewerId,
+        LocalDate reviewedDate,
         LocalDate startDate,
         LocalDate dueDate,
         Integer progress) {

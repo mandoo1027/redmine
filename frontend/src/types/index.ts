@@ -56,6 +56,10 @@ export interface Issue {
   reporterName: string | null;
   milestoneId: number | null;
   milestoneName: string | null;
+  reviewerId: number | null;
+  reviewerName: string | null;
+  reviewedDate: string | null;
+  reviewed: boolean;
   startDate: string | null;
   dueDate: string | null;
   progress: number;
@@ -73,6 +77,8 @@ export interface IssueRequest {
   priority?: IssuePriority;
   assigneeId?: number | null;
   milestoneId?: number | null;
+  reviewerId?: number | null;
+  reviewedDate?: string | null;
   startDate?: string | null;
   dueDate?: string | null;
   progress?: number;

@@ -45,7 +45,7 @@ SSH로 홈서버에 접속해 자동 배포한다.
 - 프론트엔드: `npm run build` → nginx가 `frontend/dist` 를 `/redmine/` 경로로 정적 서빙
 - 백엔드: `./gradlew bootJar` → PM2 `redmine-backend` (prod 프로파일, 포트 8082),
   nginx가 `/redmine-api/` → `127.0.0.1:8082/api/` 로 프록시
-- 운영 URL: `https://mandoo1027.tplinkdns.com/redmine/`
+- 운영 URL: `https://mandoo1027.duckdns.org/redmine/`
 
 ### 배포 키 설정
 

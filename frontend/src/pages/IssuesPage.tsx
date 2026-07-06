@@ -72,12 +72,13 @@ export default function IssuesPage() {
               <th className="px-4 py-3">우선순위</th>
               <th className="px-4 py-3">담당자</th>
               <th className="px-4 py-3">마감일</th>
+              <th className="px-4 py-3">검수여부</th>
             </tr>
           </thead>
           <tbody>
             {issues.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={9} className="px-4 py-6 text-center text-gray-400">
                   이슈가 없습니다.
                 </td>
               </tr>
@@ -142,6 +143,17 @@ export default function IssuesPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{i.assigneeName || '-'}</td>
                     <td className="px-4 py-3 text-gray-500">{i.dueDate || '-'}</td>
+                    <td className="px-4 py-3">
+                      {i.reviewed ? (
+                        <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                          예
+                        </span>
+                      ) : (
+                        <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                          아니요
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 );
               })

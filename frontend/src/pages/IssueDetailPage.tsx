@@ -70,6 +70,8 @@ export default function IssueDetailPage() {
         priority: issue.priority,
         assigneeId: issue.assigneeId,
         milestoneId: issue.milestoneId,
+        reviewerId: issue.reviewerId,
+        reviewedDate: issue.reviewedDate,
         startDate: issue.startDate,
         dueDate: issue.dueDate,
         progress: issue.progress,
@@ -96,6 +98,8 @@ export default function IssueDetailPage() {
         priority: issue.priority,
         assigneeId: issue.assigneeId,
         milestoneId: issue.milestoneId,
+        reviewerId: issue.reviewerId,
+        reviewedDate: issue.reviewedDate,
         startDate: issue.startDate,
         dueDate: issue.dueDate,
         progress: value,
@@ -190,6 +194,16 @@ export default function IssueDetailPage() {
         {row('등록자', issue.reporterName || '-')}
         {row('담당자', issue.assigneeName || '미지정')}
         {row('마일스톤', issue.milestoneName || '없음')}
+        {row('검수 담당자', issue.reviewerName || '미지정')}
+        {row('검수 일자', issue.reviewedDate || '-')}
+        {row(
+          '검수 여부',
+          issue.reviewed ? (
+            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">예</span>
+          ) : (
+            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">아니요</span>
+          )
+        )}
         {row('시작일', issue.startDate || '-')}
         {row('마감일', issue.dueDate || '-')}
         {row(

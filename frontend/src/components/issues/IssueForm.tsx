@@ -36,6 +36,8 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
   const [priority, setPriority] = useState(initial?.priority || 'NORMAL');
   const [assigneeId, setAssigneeId] = useState(initial?.assigneeId?.toString() || '');
   const [milestoneId, setMilestoneId] = useState(initial?.milestoneId?.toString() || '');
+  const [reviewerId, setReviewerId] = useState(initial?.reviewerId?.toString() || '');
+  const [reviewedDate, setReviewedDate] = useState(initial?.reviewedDate || '');
   const [startDate, setStartDate] = useState(initial?.startDate || '');
   const [dueDate, setDueDate] = useState(initial?.dueDate || '');
   const [progress, setProgress] = useState(initial?.progress ?? 0);
@@ -68,6 +70,8 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
         priority: priority as IssueRequest['priority'],
         assigneeId: assigneeId ? Number(assigneeId) : null,
         milestoneId: milestoneId ? Number(milestoneId) : null,
+        reviewerId: reviewerId ? Number(reviewerId) : null,
+        reviewedDate: reviewedDate || null,
         startDate: startDate || null,
         dueDate: dueDate || null,
         progress: Number(progress),
@@ -185,6 +189,20 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
             ))}
           </select>
         </div>
+      </div>
+      <div className="mb-4 grid grid-cols-2 gap-4">
+        <div>
+          <label className={label}>검수 담당자</label>
+          <select className={input} value={reviewerId} onChange={(e) => setReviewerId(e.target.value)}>
+            <option value="">미지정</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.displayName || u.username}
+              </option>
+            ))}
+          </select>
+        </div>
+        <DateField label="검수 일자" value={reviewedDate} onChange={setReviewedDate} />
       </div>
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <DateField label="시작일" value={startDate} onChange={setStartDate} />
