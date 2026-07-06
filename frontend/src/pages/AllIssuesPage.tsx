@@ -122,13 +122,14 @@ export default function AllIssuesPage() {
               <th className="px-4 py-3">제목</th>
               <th className="px-4 py-3">우선순위</th>
               <th className="px-4 py-3">담당자</th>
+              <th className="px-4 py-3">검수담당자</th>
               <th className="px-4 py-3">검수여부</th>
             </tr>
           </thead>
           <tbody>
             {issues.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={10} className="px-4 py-6 text-center text-gray-400">
                   이슈가 없습니다.
                 </td>
               </tr>
@@ -193,6 +194,7 @@ export default function AllIssuesPage() {
                       <PriorityBadge priority={i.priority} />
                     </td>
                     <td className="px-4 py-3 text-gray-600">{i.assigneeName || '-'}</td>
+                    <td className="px-4 py-3 text-gray-600">{i.reviewerName || '-'}</td>
                     <td className="px-4 py-3">
                       {i.reviewed ? (
                         <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
