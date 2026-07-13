@@ -7,6 +7,8 @@ import IssueFilters from '../components/issues/IssueFilters';
 import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, TrackerBadge } from '../components/issues/StatusBadge';
 import { useAuth } from '../auth/AuthContext';
+import { useIssueSort, SortableTh } from '../hooks/useIssueSort';
+import { usePersistedState } from '../hooks/usePersistedState';
 
 export default function IssuesPage() {
   const { user } = useAuth();
@@ -14,8 +16,14 @@ export default function IssuesPage() {
   const id = Number(projectId);
   const [issues, setIssues] = useState<Issue[]>([]);
   // 진입 시 기본으로 "내 것만 보기" 체크 상태로 시작 (로그인 사용자 담당 이슈).
-  const [filters, setFilters] = useState<Filters>(() => (user ? { assigneeId: user.id } : {}));
+  // 검색 조건은 sessionStorage 에 프로젝트별로 저장해, 상세로 갔다가 뒤로 와도 유지한다.
+  const [filters, setFilters] = usePersistedState<Filters>(
+    `issueFilters:project:${id}`,
+    () => (user ? { assigneeId: user.id } : {}),
+  );
   const [showForm, setShowForm] = useState(false);
+
+  const { sorted, sortKey, sortDir, toggleSort } = useIssueSort(issues);
 
   const load = () => {
     fetchIssues({ ...filters, projectId: id }).then(setIssues).catch(() => {});
@@ -64,27 +72,27 @@ export default function IssuesPage() {
         <table className="w-full text-sm">
           <thead className="border-b bg-gray-50 text-left text-gray-500">
             <tr>
-              <th className="px-4 py-3">상태</th>
-              <th className="px-4 py-3">진행률</th>
-              <th className="px-4 py-3">#</th>
-              <th className="px-4 py-3">유형</th>
-              <th className="px-4 py-3">제목</th>
-              <th className="px-4 py-3">우선순위</th>
-              <th className="px-4 py-3">담당자</th>
-              <th className="px-4 py-3">마감일</th>
-              <th className="px-4 py-3">검수담당자</th>
-              <th className="px-4 py-3">검수여부</th>
+              <SortableTh label="상태" sortKey="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="진행률" sortKey="progress" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="#" sortKey="id" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="유형" sortKey="tracker" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="제목" sortKey="subject" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="우선순위" sortKey="priority" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="담당자" sortKey="assigneeName" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="마감일" sortKey="dueDate" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="검수담당자" sortKey="reviewerName" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="검수여부" sortKey="reviewed" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
             </tr>
           </thead>
           <tbody>
-            {issues.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr>
                 <td colSpan={10} className="px-4 py-6 text-center text-gray-400">
                   이슈가 없습니다.
                 </td>
               </tr>
             ) : (
-              issues.map((i) => {
+              sorted.map((i) => {
                 const closed = i.status === 'CLOSED';
                 return (
                   <tr
