@@ -189,6 +189,14 @@ export default function IssueDetailPage() {
 
   return (
     <div className="rounded-lg bg-white p-6 shadow-sm">
+      <div className="mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1 rounded border px-3 py-1 text-sm text-gray-600 hover:bg-gray-100"
+        >
+          <span aria-hidden>←</span> 뒤로
+        </button>
+      </div>
       <div className="mb-4 flex items-start justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2">
