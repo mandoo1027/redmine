@@ -29,6 +29,8 @@ export default function IssueDetailPage() {
   // 진행률만 인라인으로 편집하기 위한 상태.
   const [progressDraft, setProgressDraft] = useState<number | null>(null);
   const [savingProgress, setSavingProgress] = useState(false);
+  // 검수 완료 처리 중 상태.
+  const [savingReviewed, setSavingReviewed] = useState(false);
 
   const load = () => {
     fetchIssue(iid).then(setIssue).catch(() => {});
@@ -108,6 +110,35 @@ export default function IssueDetailPage() {
       load();
     } finally {
       setSavingProgress(false);
+    }
+  };
+
+  // 검수 완료: 검수 확인일자를 오늘 날짜로 설정하고 즉시 저장 (다른 필드는 그대로 유지).
+  const markReviewed = async () => {
+    if (!issue) return;
+    // 로컬 기준 오늘 날짜(YYYY-MM-DD).
+    const today = new Date().toLocaleDateString('sv-SE');
+    setSavingReviewed(true);
+    try {
+      await updateIssue(iid, {
+        projectId: issue.projectId,
+        subject: issue.subject,
+        description: issue.description,
+        resolution: issue.resolution,
+        tracker: issue.tracker,
+        status: issue.status,
+        priority: issue.priority,
+        assigneeId: issue.assigneeId,
+        milestoneId: issue.milestoneId,
+        reviewerId: issue.reviewerId,
+        reviewedDate: today,
+        startDate: issue.startDate,
+        dueDate: issue.dueDate,
+        progress: issue.progress,
+      });
+      load();
+    } finally {
+      setSavingReviewed(false);
     }
   };
 
@@ -201,7 +232,16 @@ export default function IssueDetailPage() {
           issue.reviewed ? (
             <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">예</span>
           ) : (
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">아니요</span>
+            <div className="flex items-center gap-2">
+              <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">아니요</span>
+              <button
+                onClick={markReviewed}
+                disabled={savingReviewed}
+                className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {savingReviewed ? '처리 중...' : '검수 완료'}
+              </button>
+            </div>
           )
         )}
         {row('시작일', issue.startDate || '-')}
