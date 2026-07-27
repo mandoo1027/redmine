@@ -1,6 +1,6 @@
 name: Deploy
 
-# main 브랜치 push 시 홈서버(mandoo1027.tplinkdns.com)로 자동 배포
+# main 브랜치 push 시 홈서버(mandoo1027.duckdns.org)로 자동 배포
 on:
   push:
     branches: [main]
@@ -13,7 +13,7 @@ jobs:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: mandoo1027.tplinkdns.com
+          host: mandoo1027.duckdns.org
           username: gyeong-il
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           # 빌드 시간이 길 수 있으므로 타임아웃 확대
