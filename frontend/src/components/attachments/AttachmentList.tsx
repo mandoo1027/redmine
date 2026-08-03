@@ -4,6 +4,7 @@ import {
   deleteAttachment,
   listAttachments,
   uploadAttachment,
+  uploadErrorMessage,
   type Attachment,
   type ParentType,
 } from '../../api/attachments';
@@ -49,18 +50,20 @@ export default function AttachmentList({ parentType, parentId, editable = true }
     setUploading(true);
     setProgress({ done: 0, total: files.length });
     const failed: string[] = [];
+    let reason = '';
     for (let i = 0; i < files.length; i++) {
       try {
         await uploadAttachment(parentType, parentId, files[i]);
       } catch (err: any) {
         failed.push(files[i].name);
+        reason = uploadErrorMessage(err);
       }
       setProgress({ done: i + 1, total: files.length });
     }
     setUploading(false);
     setProgress(null);
     if (failed.length > 0) {
-      setError(`업로드 실패: ${failed.join(', ')}`);
+      setError(`업로드 실패: ${failed.join(', ')} (${reason})`);
     }
     load();
   };

@@ -63,3 +63,18 @@ export function attachmentDownloadUrl(id: number, inline = false): string {
   const base = client.defaults.baseURL || '/api';
   return `${base}/attachments/${id}/download${inline ? '?inline=true' : ''}`;
 }
+
+// 업로드 실패 시 사용자에게 보여줄 메시지를 뽑아낸다.
+// 백엔드가 내려준 message(예: 파일 크기 초과 안내)를 우선 사용하고,
+// 없으면 상태 코드 기준 기본 문구를 사용한다.
+export function uploadErrorMessage(err: any): string {
+  const status = err?.response?.status;
+  const serverMessage = err?.response?.data?.message;
+  if (status === 413) {
+    return serverMessage || '파일이 너무 큽니다. 최대 50MB까지 업로드할 수 있습니다.';
+  }
+  if (typeof serverMessage === 'string' && serverMessage) {
+    return serverMessage;
+  }
+  return '업로드에 실패했습니다.';
+}

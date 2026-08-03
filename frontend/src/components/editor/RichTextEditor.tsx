@@ -12,6 +12,20 @@ interface Props {
   placeholder?: string;
 }
 
+// 업로드 실패 원인을 사용자용 문구로 변환. 서버가 내려준 메시지(예: 파일
+// 크기 초과 안내)를 우선 사용하고, 없으면 기본 문구를 반환한다.
+function imageUploadErrorMessage(err: any): string {
+  const status = err?.response?.status;
+  const serverMessage = err?.response?.data?.message;
+  if (status === 413) {
+    return serverMessage || '이미지가 너무 큽니다. 최대 50MB까지 업로드할 수 있습니다.';
+  }
+  if (typeof serverMessage === 'string' && serverMessage) {
+    return serverMessage;
+  }
+  return '이미지 업로드에 실패했습니다.';
+}
+
 function ToolbarButton({
   active,
   onClick,
@@ -54,8 +68,8 @@ function Toolbar({
     try {
       const url = await onImageUpload(file);
       editor.chain().focus().setImage({ src: url }).run();
-    } catch {
-      await alert('이미지 업로드에 실패했습니다.', { title: '오류' });
+    } catch (err) {
+      await alert(imageUploadErrorMessage(err), { title: '오류' });
     }
   };
 
@@ -163,8 +177,8 @@ export default function RichTextEditor({ value, onChange, onImageUpload, placeho
     try {
       const url = await uploader(file);
       ed.chain().focus().setImage({ src: url }).run();
-    } catch {
-      await alert('이미지 업로드에 실패했습니다.', { title: '오류' });
+    } catch (err) {
+      await alert(imageUploadErrorMessage(err), { title: '오류' });
     }
   };
 
