@@ -15,9 +15,11 @@ export default function AllIssuesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   // 진입 시 기본은 전체 보기(필터 없음). "내 것만 보기"는 사용자가 직접 체크한다.
   // 검색 조건은 sessionStorage 에 저장해, 상세로 갔다가 뒤로 와도 유지한다.
+  // 단, "내 것만 보기"(assigneeId)는 저장/복원에서 제외해 페이지 진입 시 항상 전체 보기로 시작한다.
   const [filters, setFilters] = usePersistedState<Filters>(
     'issueFilters:all',
     () => ({}),
+    { omitKeys: ['assigneeId'] },
   );
   const [showForm, setShowForm] = useState(false);
   // 새 이슈를 등록할 대상 프로젝트.
