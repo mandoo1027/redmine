@@ -7,19 +7,17 @@ import { STATUSES, STATUS_LABELS } from '../types';
 import IssueFilters from '../components/issues/IssueFilters';
 import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, TrackerBadge } from '../components/issues/StatusBadge';
-import { useAuth } from '../auth/AuthContext';
 import { useIssueSort, SortableTh } from '../hooks/useIssueSort';
 import { usePersistedState } from '../hooks/usePersistedState';
 
 export default function AllIssuesPage() {
-  const { user } = useAuth();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  // 진입 시 기본으로 "내 것만 보기" 체크 상태로 시작 (로그인 사용자 담당 이슈).
+  // 진입 시 기본은 전체 보기(필터 없음). "내 것만 보기"는 사용자가 직접 체크한다.
   // 검색 조건은 sessionStorage 에 저장해, 상세로 갔다가 뒤로 와도 유지한다.
   const [filters, setFilters] = usePersistedState<Filters>(
     'issueFilters:all',
-    () => (user ? { assigneeId: user.id } : {}),
+    () => ({}),
   );
   const [showForm, setShowForm] = useState(false);
   // 새 이슈를 등록할 대상 프로젝트.

@@ -13,6 +13,7 @@ import com.example.redmine.project.Project;
 import com.example.redmine.project.ProjectRepository;
 import com.example.redmine.user.User;
 import com.example.redmine.user.UserRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +67,9 @@ public class IssueService {
                 .and(IssueSpecifications.assigneeNameLike(assigneeName))
                 .and(IssueSpecifications.reviewerId(reviewerId))
                 .and(IssueSpecifications.reviewerNameLike(reviewerName));
-        return issueRepository.findAll(spec).stream().map(IssueDto::summary).toList();
+        // 최근 등록된 이슈가 맨 위에 오도록 id 내림차순 정렬.
+        Sort sort = Sort.by(Sort.Direction.DESC, "id");
+        return issueRepository.findAll(spec, sort).stream().map(IssueDto::summary).toList();
     }
 
     @Transactional(readOnly = true)
