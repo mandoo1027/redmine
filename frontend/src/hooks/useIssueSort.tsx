@@ -13,7 +13,8 @@ export type SortKey =
   | 'assigneeName'
   | 'dueDate'
   | 'reviewerName'
-  | 'reviewed';
+  | 'reviewed'
+  | 'createdAt';
 
 type SortDir = 'asc' | 'desc';
 
@@ -46,6 +47,8 @@ function sortValue(issue: Issue, key: SortKey): number | string {
       return issue.dueDate || '';
     case 'reviewerName':
       return issue.reviewerName || '';
+    case 'createdAt':
+      return issue.createdAt || '';
     default:
       return '';
   }

@@ -27,6 +27,15 @@ export default function AllIssuesPage() {
 
   const { sorted, sortKey, sortDir, toggleSort } = useIssueSort(issues);
 
+  // 등록일시를 'YYYY-MM-DD HH:mm' 형태로 표시.
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '-';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const load = () => {
     fetchIssues(filters).then(setIssues).catch(() => {});
   };
@@ -132,12 +141,13 @@ export default function AllIssuesPage() {
               <SortableTh label="담당자" sortKey="assigneeName" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <SortableTh label="검수담당자" sortKey="reviewerName" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
               <SortableTh label="검수여부" sortKey="reviewed" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="등록일시" sortKey="createdAt" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={11} className="px-4 py-6 text-center text-gray-400">
                   이슈가 없습니다.
                 </td>
               </tr>
@@ -213,6 +223,9 @@ export default function AllIssuesPage() {
                           아니요
                         </span>
                       )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-gray-500">
+                      {formatDateTime(i.createdAt)}
                     </td>
                   </tr>
                 );
