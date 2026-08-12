@@ -60,10 +60,19 @@ export default function AllIssuesPage() {
 
   // 목록에서 상태만 즉시 변경 (설명·해결내용 등은 서버에서 그대로 유지).
   const handleStatusChange = async (id: number, status: IssueStatus) => {
-    // 낙관적 업데이트: 먼저 화면에 반영하고, 실패 시 다시 로드.
+    // 낙관적 업데이트: 먼저 화면에 반영해 즉시 반응하게 한다.
     setIssues((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     try {
-      await updateIssueStatus(id, status);
+      // 서버가 반환한 최종 이슈로 행을 교체한다(진행률 등 파생 필드까지 동기화).
+      const updated = await updateIssueStatus(id, status);
+      setIssues((prev) => {
+        const next = prev.map((i) => (i.id === id ? updated : i));
+        // 상태 필터가 걸려 있고 새 상태가 필터와 맞지 않으면 목록에서 즉시 제거.
+        if (filters.status && updated.status !== filters.status) {
+          return next.filter((i) => i.id !== id);
+        }
+        return next;
+      });
     } catch {
       load();
     }
