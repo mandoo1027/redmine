@@ -4,6 +4,8 @@ import { PRIORITY_LABELS, STATUS_LABELS, TRACKER_LABELS } from '../../types';
 const statusColors: Record<IssueStatus, string> = {
   OPEN: 'bg-green-100 text-green-800',
   IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
+  // 검수요청은 진행중/완료와 구분되도록 보라 계열 배지.
+  INSPECTION_REQUEST: 'bg-purple-100 text-purple-800',
   // 완료(종료)는 확실히 구분되도록 진한 배지 + 체크 표시.
   CLOSED: 'bg-gray-700 text-white',
 };
@@ -12,6 +14,7 @@ const statusColors: Record<IssueStatus, string> = {
 const statusPrefix: Record<IssueStatus, string> = {
   OPEN: '',
   IN_PROGRESS: '',
+  INSPECTION_REQUEST: '',
   CLOSED: '✓ ',
 };
 

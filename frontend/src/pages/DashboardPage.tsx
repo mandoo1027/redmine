@@ -16,6 +16,7 @@ export default function DashboardPage() {
 
   const openCount = issues.filter((i) => i.status === 'OPEN').length;
   const inProgressCount = issues.filter((i) => i.status === 'IN_PROGRESS').length;
+  const inspectionCount = issues.filter((i) => i.status === 'INSPECTION_REQUEST').length;
   const closedCount = issues.filter((i) => i.status === 'CLOSED').length;
 
   const stat = (label: string, value: number, color: string) => (
@@ -28,10 +29,11 @@ export default function DashboardPage() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-gray-800">대시보드</h1>
-      <div className="mb-8 grid grid-cols-4 gap-4">
+      <div className="mb-8 grid grid-cols-5 gap-4">
         {stat('프로젝트', projects.length, 'text-blue-600')}
         {stat('열림', openCount, 'text-green-600')}
         {stat('진행중', inProgressCount, 'text-yellow-600')}
+        {stat('검수요청', inspectionCount, 'text-purple-600')}
         {stat('완료', closedCount, 'text-gray-500')}
       </div>
 

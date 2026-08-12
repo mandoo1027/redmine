@@ -19,7 +19,7 @@ export type SortKey =
 type SortDir = 'asc' | 'desc';
 
 // enum 은 정의된 순서대로 정렬되도록 순위를 매긴다.
-const STATUS_ORDER: Record<IssueStatus, number> = { OPEN: 0, IN_PROGRESS: 1, CLOSED: 2 };
+const STATUS_ORDER: Record<IssueStatus, number> = { OPEN: 0, IN_PROGRESS: 1, INSPECTION_REQUEST: 2, CLOSED: 3 };
 const PRIORITY_ORDER: Record<IssuePriority, number> = { LOW: 0, NORMAL: 1, HIGH: 2, URGENT: 3 };
 
 // 각 컬럼에서 비교에 사용할 값을 추출한다.

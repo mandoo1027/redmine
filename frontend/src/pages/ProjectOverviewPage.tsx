@@ -21,7 +21,7 @@ export default function ProjectOverviewPage() {
       <div className="space-y-6">
         <div className="rounded-lg bg-white p-5 shadow-sm">
           <h2 className="mb-3 font-semibold text-gray-700">이슈 요약</h2>
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-4 gap-3 text-center">
             <div>
               <div className="text-2xl font-bold text-green-600">{count('OPEN')}</div>
               <div className="text-xs text-gray-500">열림</div>
@@ -29,6 +29,10 @@ export default function ProjectOverviewPage() {
             <div>
               <div className="text-2xl font-bold text-yellow-600">{count('IN_PROGRESS')}</div>
               <div className="text-xs text-gray-500">진행중</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-purple-600">{count('INSPECTION_REQUEST')}</div>
+              <div className="text-xs text-gray-500">검수요청</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-gray-500">{count('CLOSED')}</div>

@@ -37,7 +37,7 @@ export interface ProjectMember {
 }
 
 export type TrackerType = 'BUG' | 'FEATURE' | 'TASK' | 'ERROR';
-export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'INSPECTION_REQUEST' | 'CLOSED';
 export type IssuePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 export interface Issue {
@@ -133,7 +133,7 @@ export interface AppNotification {
 }
 
 export const TRACKERS: TrackerType[] = ['BUG', 'FEATURE', 'TASK', 'ERROR'];
-export const STATUSES: IssueStatus[] = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
+export const STATUSES: IssueStatus[] = ['OPEN', 'IN_PROGRESS', 'INSPECTION_REQUEST', 'CLOSED'];
 export const PRIORITIES: IssuePriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
 // 영어 enum 값은 유지하고, 표시만 한글로.
@@ -146,6 +146,7 @@ export const TRACKER_LABELS: Record<TrackerType, string> = {
 export const STATUS_LABELS: Record<IssueStatus, string> = {
   OPEN: '열림',
   IN_PROGRESS: '진행중',
+  INSPECTION_REQUEST: '검수요청',
   CLOSED: '완료',
 };
 export const PRIORITY_LABELS: Record<IssuePriority, string> = {
