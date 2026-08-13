@@ -11,7 +11,9 @@ import com.example.redmine.user.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -40,11 +42,12 @@ public class CommentService {
                 .orElseThrow(() -> new NotFoundException("Issue not found: " + issueId));
         Comment comment = commentRepository.save(new Comment(issue, author, content));
 
-        // 내 글에 내가 댓글 단 경우가 아니면 등록자에게 알림.
-        User reporter = issue.getReporter();
-        if (reporter != null && !reporter.getId().equals(author.getId())) {
-            notificationService.notifyComment(reporter, issue, displayName(author));
-        }
+        // 이해당사자(담당자 + 등록자)에게 댓글 알림.
+        // - 본인(댓글 작성자)에게는 보내지 않음
+        // - 담당자와 등록자가 같은 사람이면 한 번만 보냄
+        Set<Long> notified = new HashSet<>();
+        notifyStakeholder(issue.getAssignee(), issue, author, notified);
+        notifyStakeholder(issue.getReporter(), issue, author, notified);
         return CommentDto.from(comment);
     }
 
@@ -62,6 +65,20 @@ public class CommentService {
 
     public void deleteAllForIssue(Long issueId) {
         commentRepository.deleteAll(commentRepository.findByIssueIdOrderByCreatedAtAsc(issueId));
+    }
+
+    // 대상이 있고, 댓글 작성자 본인이 아니며, 아직 알림을 보내지 않은 경우에만 발송.
+    private void notifyStakeholder(User recipient, Issue issue, User author, Set<Long> notified) {
+        if (recipient == null || recipient.getId() == null) {
+            return;
+        }
+        if (recipient.getId().equals(author.getId())) {
+            return;
+        }
+        if (!notified.add(recipient.getId())) {
+            return;
+        }
+        notificationService.notifyComment(recipient, issue, displayName(author));
     }
 
     private String displayName(User user) {
