@@ -100,40 +100,6 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
   return (
     <form onSubmit={handleSubmit} className="rounded-lg bg-white p-5 shadow-sm">
       {error && <div className="mb-3 rounded bg-red-50 p-2 text-sm text-red-700">{error}</div>}
-      <div className="mb-4">
-        <label className={label}>제목</label>
-        <input className={input} value={subject} onChange={(e) => setSubject(e.target.value)} required />
-      </div>
-      <div className="mb-4">
-        <label className={label}>설명</label>
-        <RichTextEditor
-          value={description}
-          onChange={setDescription}
-          onImageUpload={async (file) => {
-            // 기존 이슈 수정 시엔 서버 첨부로 업로드 후 URL 삽입,
-            // 새 이슈 작성 중(ID 없음)엔 draft 첨부로 업로드 후 URL 삽입.
-            // 어느 경우든 base64 를 본문에 넣지 않아 본문이 가벼워진다.
-            const att = initial?.id
-              ? await uploadAttachment('ISSUE', initial.id, file)
-              : await uploadDraftAttachment('ISSUE', file);
-            return attachmentDownloadUrl(att.id, true);
-          }}
-        />
-      </div>
-      <div className="mb-4">
-        <label className={label}>해결 내용</label>
-        <RichTextEditor
-          value={resolution}
-          onChange={setResolution}
-          placeholder="이슈 해결 내용을 입력하세요"
-          onImageUpload={async (file) => {
-            const att = initial?.id
-              ? await uploadAttachment('ISSUE', initial.id, file)
-              : await uploadDraftAttachment('ISSUE', file);
-            return attachmentDownloadUrl(att.id, true);
-          }}
-        />
-      </div>
       <div className="mb-4 grid grid-cols-3 gap-4">
         <div>
           <label className={label}>유형</label>
@@ -218,6 +184,41 @@ export default function IssueForm({ projectId, initial, onSubmit, onCancel }: Pr
             onChange={(e) => setProgress(Number(e.target.value))}
           />
         </div>
+      </div>
+
+      <div className="mb-4 border-t pt-4">
+        <label className={label}>제목</label>
+        <input className={input} value={subject} onChange={(e) => setSubject(e.target.value)} required />
+      </div>
+      <div className="mb-4">
+        <label className={label}>설명</label>
+        <RichTextEditor
+          value={description}
+          onChange={setDescription}
+          onImageUpload={async (file) => {
+            // 기존 이슈 수정 시엔 서버 첨부로 업로드 후 URL 삽입,
+            // 새 이슈 작성 중(ID 없음)엔 draft 첨부로 업로드 후 URL 삽입.
+            // 어느 경우든 base64 를 본문에 넣지 않아 본문이 가벼워진다.
+            const att = initial?.id
+              ? await uploadAttachment('ISSUE', initial.id, file)
+              : await uploadDraftAttachment('ISSUE', file);
+            return attachmentDownloadUrl(att.id, true);
+          }}
+        />
+      </div>
+      <div className="mb-4">
+        <label className={label}>해결 내용</label>
+        <RichTextEditor
+          value={resolution}
+          onChange={setResolution}
+          placeholder="이슈 해결 내용을 입력하세요"
+          onImageUpload={async (file) => {
+            const att = initial?.id
+              ? await uploadAttachment('ISSUE', initial.id, file)
+              : await uploadDraftAttachment('ISSUE', file);
+            return attachmentDownloadUrl(att.id, true);
+          }}
+        />
       </div>
 
       <div className="mb-4 border-t pt-4">

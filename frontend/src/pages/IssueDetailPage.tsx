@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createIssue, deleteIssue, fetchIssue, updateIssue } from '../api/issues';
-import type { Issue, IssueRequest } from '../types';
+import { createIssue, deleteIssue, fetchIssue, updateIssue, updateIssueStatus } from '../api/issues';
+import type { Issue, IssueRequest, IssueStatus } from '../types';
+import { STATUSES, STATUS_LABELS } from '../types';
 import IssueForm from '../components/issues/IssueForm';
-import { PriorityBadge, StatusBadge, TrackerBadge } from '../components/issues/StatusBadge';
+import { PriorityBadge, TrackerBadge } from '../components/issues/StatusBadge';
 import RichTextView from '../components/editor/RichTextView';
 import RichTextEditor from '../components/editor/RichTextEditor';
 import AttachmentList from '../components/attachments/AttachmentList';
@@ -31,12 +32,31 @@ export default function IssueDetailPage() {
   const [savingProgress, setSavingProgress] = useState(false);
   // 검수 완료 처리 중 상태.
   const [savingReviewed, setSavingReviewed] = useState(false);
+  // 진행 상태 변경 중 상태.
+  const [savingStatus, setSavingStatus] = useState(false);
 
   const load = () => {
     fetchIssue(iid).then(setIssue).catch(() => {});
   };
 
   useEffect(load, [iid]);
+
+  // 상세 화면에서 진행 상태만 즉시 변경 (다른 필드는 서버에서 그대로 유지).
+  const changeStatus = async (status: IssueStatus) => {
+    if (!issue) return;
+    // 낙관적 업데이트: 먼저 화면에 반영.
+    setIssue({ ...issue, status });
+    setSavingStatus(true);
+    try {
+      // 서버가 반환한 최종 이슈로 교체(진행률 등 파생 필드까지 동기화).
+      const updated = await updateIssueStatus(iid, status);
+      setIssue(updated);
+    } catch {
+      load();
+    } finally {
+      setSavingStatus(false);
+    }
+  };
 
   const handleUpdate = async (payload: IssueRequest) => {
     await updateIssue(iid, payload);
@@ -228,7 +248,32 @@ export default function IssueDetailPage() {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-x-8">
-        {row('상태', <StatusBadge status={issue.status} />)}
+        {row(
+          '상태',
+          <div className="flex items-center gap-2">
+            <select
+              value={issue.status}
+              disabled={savingStatus}
+              onChange={(e) => changeStatus(e.target.value as IssueStatus)}
+              className={`rounded border px-2 py-1 text-xs font-medium focus:outline-none disabled:opacity-50 ${
+                issue.status === 'CLOSED'
+                  ? 'border-green-200 bg-green-50 text-green-700'
+                  : issue.status === 'IN_PROGRESS'
+                  ? 'border-blue-200 bg-blue-50 text-blue-700'
+                  : issue.status === 'INSPECTION_REQUEST'
+                  ? 'border-purple-200 bg-purple-50 text-purple-700'
+                  : 'border-gray-200 bg-gray-50 text-gray-700'
+              }`}
+            >
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+            {savingStatus && <span className="text-xs text-gray-400">저장 중...</span>}
+          </div>,
+        )}
         {row('우선순위', <PriorityBadge priority={issue.priority} />)}
         {row('등록자', issue.reporterName || '-')}
         {row('담당자', issue.assigneeName || '미지정')}
