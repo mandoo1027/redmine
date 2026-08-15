@@ -7,7 +7,7 @@ import { STATUSES, STATUS_LABELS } from '../types';
 import IssueFilters from '../components/issues/IssueFilters';
 import IssueForm from '../components/issues/IssueForm';
 import { PriorityBadge, TrackerBadge } from '../components/issues/StatusBadge';
-import { useIssueSort, SortableTh } from '../hooks/useIssueSort';
+import { useIssueSort, SortableTh, type SortKey } from '../hooks/useIssueSort';
 import { usePersistedState } from '../hooks/usePersistedState';
 
 export default function AllIssuesPage() {
@@ -24,6 +24,9 @@ export default function AllIssuesPage() {
   const [showForm, setShowForm] = useState(false);
   // 새 이슈를 등록할 대상 프로젝트.
   const [formProjectId, setFormProjectId] = useState<number | null>(null);
+  // 페이징: 20개씩. 검색/정렬 변경 시 1페이지로 되돌린다.
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
 
   const { sorted, sortKey, sortDir, toggleSort } = useIssueSort(issues);
 
@@ -49,7 +52,24 @@ export default function AllIssuesPage() {
       .catch(() => {});
   }, []);
 
+  // 조회는 필터 확정(검색 버튼) 또는 프로젝트 셀렉트 변경 시에만 일어난다.
   useEffect(load, [filters]);
+
+  // "검색" 버튼으로 확정된 필터를 저장한다(프로젝트 셀렉트 값은 유지).
+  const handleSearch = (next: Filters) => {
+    setPage(1);
+    setFilters({ ...next, projectId: filters.projectId });
+  };
+
+  // 정렬이 바뀌면 첫 페이지부터 다시 본다.
+  const handleSort = (key: SortKey) => {
+    setPage(1);
+    toggleSort(key);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const handleCreate = async (payload: IssueRequest) => {
     const created = await createIssue(payload);
@@ -122,9 +142,10 @@ export default function AllIssuesPage() {
         <select
           className="rounded border px-2 py-1 text-sm"
           value={filters.projectId || ''}
-          onChange={(e) =>
-            setFilters({ ...filters, projectId: e.target.value ? Number(e.target.value) : undefined })
-          }
+          onChange={(e) => {
+            setPage(1);
+            setFilters({ ...filters, projectId: e.target.value ? Number(e.target.value) : undefined });
+          }}
         >
           <option value="">프로젝트 전체</option>
           {projects.map((p) => (
@@ -134,23 +155,23 @@ export default function AllIssuesPage() {
           ))}
         </select>
       </div>
-      <IssueFilters filters={filters} onChange={setFilters} />
+      <IssueFilters filters={filters} onSearch={handleSearch} />
 
       <div className="overflow-hidden rounded-lg bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="border-b bg-gray-50 text-left text-gray-500">
             <tr>
-              <SortableTh label="상태" sortKey="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="진행률" sortKey="progress" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="#" sortKey="id" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="프로젝트" sortKey="projectKey" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="유형" sortKey="tracker" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="제목" sortKey="subject" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="우선순위" sortKey="priority" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="담당자" sortKey="assigneeName" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="검수담당자" sortKey="reviewerName" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="검수여부" sortKey="reviewed" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
-              <SortableTh label="등록일시" sortKey="createdAt" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+              <SortableTh label="상태" sortKey="status" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="진행률" sortKey="progress" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="#" sortKey="id" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="프로젝트" sortKey="projectKey" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="유형" sortKey="tracker" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="제목" sortKey="subject" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="우선순위" sortKey="priority" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="담당자" sortKey="assigneeName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="검수담당자" sortKey="reviewerName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="검수여부" sortKey="reviewed" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="등록일시" sortKey="createdAt" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
             </tr>
           </thead>
           <tbody>
@@ -161,7 +182,7 @@ export default function AllIssuesPage() {
                 </td>
               </tr>
             ) : (
-              sorted.map((i) => {
+              paged.map((i) => {
                 const closed = i.status === 'CLOSED';
                 return (
                   <tr
@@ -245,6 +266,70 @@ export default function AllIssuesPage() {
           </tbody>
         </table>
       </div>
+
+      {sorted.length > 0 && (
+        <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+          <span>
+            총 {sorted.length}건 · {currentPage}/{totalPages} 페이지
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(1)}
+              disabled={currentPage === 1}
+              className="rounded border px-2 py-1 hover:bg-gray-50 disabled:opacity-40"
+            >
+              «
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="rounded border px-2 py-1 hover:bg-gray-50 disabled:opacity-40"
+            >
+              이전
+            </button>
+            {Array.from({ length: totalPages }, (_, idx) => idx + 1)
+              .filter((p) => Math.abs(p - currentPage) <= 2 || p === 1 || p === totalPages)
+              .reduce<number[]>((acc, p) => {
+                if (acc.length > 0 && p - acc[acc.length - 1] > 1) acc.push(-1);
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) =>
+                p === -1 ? (
+                  <span key={`gap-${idx}`} className="px-1 text-gray-400">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`rounded border px-3 py-1 ${
+                      p === currentPage
+                        ? 'border-blue-600 bg-blue-600 text-white'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ),
+              )}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded border px-2 py-1 hover:bg-gray-50 disabled:opacity-40"
+            >
+              다음
+            </button>
+            <button
+              onClick={() => setPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="rounded border px-2 py-1 hover:bg-gray-50 disabled:opacity-40"
+            >
+              »
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
