@@ -177,12 +177,16 @@ public class IssueService {
     }
 
     private void applyRequest(Issue issue, IssueRequest request) {
+        // 진행률 자동 전환보다 사용자가 명시적으로 고른 상태를 우선한다.
+        // 요청에 status 가 들어오면 그 값이 최종 상태이므로, 진행률 기반 자동 전환은 건너뛴다.
+        IssueStatus prevStatus = issue.getStatus();
         issue.setDescription(request.description());
         issue.setResolution(request.resolution());
         if (request.tracker() != null) {
             issue.setTracker(TrackerType.valueOf(request.tracker()));
         }
-        if (request.status() != null) {
+        boolean explicitStatus = request.status() != null;
+        if (explicitStatus) {
             issue.setStatus(IssueStatus.valueOf(request.status()));
         }
         if (request.priority() != null) {
@@ -216,7 +220,15 @@ public class IssueService {
             int progress = Math.max(0, Math.min(100, request.progress()));
             issue.setProgress(progress);
             // 진행률 변경 시 상태 자동 전환: 100% → 완료(CLOSED), 그 외 → 진행중(IN_PROGRESS).
-            issue.setStatus(progress >= 100 ? IssueStatus.CLOSED : IssueStatus.IN_PROGRESS);
+            // 단, 사용자가 이번 요청에서 상태를 명시적으로 바꿨다면(진행률로 유도된 값과 다르면)
+            // 그 선택을 우선해 자동 전환으로 덮어쓰지 않는다.
+            IssueStatus autoStatus = progress >= 100 ? IssueStatus.CLOSED : IssueStatus.IN_PROGRESS;
+            boolean userChangedStatus = explicitStatus
+                    && request.status() != null
+                    && !IssueStatus.valueOf(request.status()).equals(prevStatus);
+            if (!userChangedStatus) {
+                issue.setStatus(autoStatus);
+            }
         }
     }
 
