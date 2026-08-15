@@ -24,8 +24,8 @@ export default function AllIssuesPage() {
   const [showForm, setShowForm] = useState(false);
   // 새 이슈를 등록할 대상 프로젝트.
   const [formProjectId, setFormProjectId] = useState<number | null>(null);
-  // 페이징: 20개씩. 검색/정렬 변경 시 1페이지로 되돌린다.
-  const PAGE_SIZE = 20;
+  // 페이징: 40개씩. 검색/정렬 변경 시 1페이지로 되돌린다.
+  const PAGE_SIZE = 40;
   const [page, setPage] = useState(1);
 
   const { sorted, sortKey, sortDir, toggleSort } = useIssueSort(issues);
