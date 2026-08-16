@@ -110,12 +110,13 @@ export default function IssuesPage() {
               <SortableTh label="마감일" sortKey="dueDate" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
               <SortableTh label="검수담당자" sortKey="reviewerName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
               <SortableTh label="검수여부" sortKey="reviewed" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortableTh label="등록일시" sortKey="createdAt" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={11} className="px-4 py-6 text-center text-gray-400">
                   이슈가 없습니다.
                 </td>
               </tr>
@@ -193,6 +194,9 @@ export default function IssuesPage() {
                           아니요
                         </span>
                       )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-500">
+                      {i.createdAt ? i.createdAt.replace('T', ' ').slice(0, 16).replace(/-/g, '.') : '-'}
                     </td>
                   </tr>
                 );
