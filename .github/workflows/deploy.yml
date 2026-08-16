@@ -48,3 +48,51 @@ jobs:
             # nginx 가 ~/develop/redmine/frontend/dist 를 직접 alias 서빙
 
             pm2 save
+
+  # 2번 인스턴스: 완전 별도 소스/DB/포트/URL (/redmine2/, 8083, redmine2/backend/data)
+  deploy2:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy redmine2 over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: mandoo1027.duckdns.org
+          username: gyeong-il
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 20m
+          script: |
+            set -e
+            source ~/.nvm/nvm.sh
+            nvm use 20
+            export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+            export PATH="$JAVA_HOME/bin:$PATH"
+
+            # 최초 배포 시 클론(없으면), 이후엔 최신화
+            if [ ! -d ~/develop/redmine2/.git ]; then
+              git clone https://github.com/mandoo1027/redmine.git ~/develop/redmine2
+            fi
+            cd ~/develop/redmine2
+            git fetch --all
+            git reset --hard origin/main
+
+            # ---- 백엔드 빌드 (Spring Boot bootJar) ----
+            cd backend
+            chmod +x ./gradlew
+            ./gradlew bootJar -x test
+            mkdir -p data
+
+            # ---- 백엔드 재기동 (PM2, prod 프로파일, 포트 8083, 별도 DB) ----
+            # cwd 가 redmine2/backend 이므로 ./data/redmine.db 도 이 인스턴스 전용.
+            JAR=$(ls -t build/libs/redmine-backend-*.jar | head -1)
+            pm2 delete redmine2-backend 2>/dev/null || true
+            pm2 start "$JAVA_HOME/bin/java" --name redmine2-backend --cwd "$PWD" -- \
+              -jar "$PWD/$JAR" --spring.profiles.active=prod --server.port=8083
+
+            # ---- 프론트엔드 빌드 (Vite, base=/redmine2/, API=/redmine2-api) ----
+            cd ../frontend
+            npm ci
+            VITE_BASE_PATH=/redmine2/ VITE_API_BASE=/redmine2-api npm run build
+            # nginx 가 ~/develop/redmine2/frontend/dist 를 /redmine2 로 alias 서빙
+
+            pm2 save
