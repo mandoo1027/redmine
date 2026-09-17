@@ -19,6 +19,7 @@ import WikiViewPage from './pages/WikiViewPage';
 import WikiEditPage from './pages/WikiEditPage';
 import WikiHomePage from './pages/WikiHomePage';
 import AllIssuesPage from './pages/AllIssuesPage';
+import SchedulePage from './pages/SchedulePage';
 
 // Vite base('/redmine/' 또는 '/')에서 라우터 basename 도출 (끝 슬래시 제거)
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -31,6 +32,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          {/* 공유 일정 달력 — 로그인 없이 조회 가능(편집은 로그인 시) */}
+          <Route path="/schedule" element={<SchedulePage />} />
           <Route
             element={
               <ProtectedRoute>

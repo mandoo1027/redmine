@@ -155,3 +155,25 @@ export const PRIORITY_LABELS: Record<IssuePriority, string> = {
   HIGH: '높음',
   URGENT: '긴급',
 };
+
+// ===== 공유 일정(스케쥴) =====
+export interface ScheduleEvent {
+  id: number;
+  title: string;
+  startDate: string;        // YYYY-MM-DD
+  endDate: string | null;   // 없으면 당일
+  timeText: string | null;  // 시간 메모(자유 텍스트)
+  color: string | null;     // hex
+  description: string | null;
+  createdByName: string | null;
+  createdAt: string;
+}
+
+export interface ScheduleEventRequest {
+  title: string;
+  startDate: string;
+  endDate?: string | null;
+  timeText?: string | null;
+  color?: string | null;
+  description?: string | null;
+}
