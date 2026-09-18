@@ -559,7 +559,7 @@ export default function SchedulePage() {
                       disabled={saving}
                       className="block w-full text-xs text-slate-500 file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-600 hover:file:bg-slate-200"
                     />
-                    <p className="text-[11px] text-slate-400">다운로드는 로그인한 사용자만 가능합니다.</p>
+                    <p className="text-[11px] text-slate-400">다운로드는 누구나 가능합니다(공개).</p>
                   </div>
                 )}
               </div>
@@ -625,8 +625,14 @@ export default function SchedulePage() {
               {viewEvent.description && <div className="whitespace-pre-wrap pt-1">{viewEvent.description}</div>}
               {viewEvent.attachmentName && (
                 <div className="pt-1">
-                  <span className="text-slate-400">첨부 </span>🔒 {viewEvent.attachmentName}
-                  <span className="ml-1 text-xs text-slate-400">(로그인 후 다운로드)</span>
+                  <span className="text-slate-400">첨부 </span>
+                  <button
+                    type="button"
+                    onClick={() => onDownload({ id: viewEvent.id, attachmentName: viewEvent.attachmentName })}
+                    className="text-blue-600 hover:underline"
+                  >
+                    📎 {viewEvent.attachmentName}
+                  </button>
                 </div>
               )}
               {viewEvent.createdByName && (

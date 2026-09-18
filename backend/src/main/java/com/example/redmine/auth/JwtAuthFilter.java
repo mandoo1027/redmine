@@ -43,9 +43,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 공유 일정(스케쥴) 목록 조회만 공개(비로그인) 허용.
-        // 생성/수정/삭제 및 첨부파일 다운로드(/api/schedule/{id}/attachment)는 아래 토큰 검증을 거친다.
-        if (request.getMethod().equals("GET") && path.equals("/api/schedule")) {
+        // 공유 일정(스케쥴): 목록 조회 + 첨부파일 다운로드는 공개(비로그인) 허용.
+        // 생성/수정/삭제/업로드는 아래 토큰 검증을 거친다.
+        if (request.getMethod().equals("GET")
+                && (path.equals("/api/schedule")
+                    || path.matches("/api/schedule/\\d+/attachment"))) {
             filterChain.doFilter(request, response);
             return;
         }
