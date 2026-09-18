@@ -168,7 +168,28 @@ export interface ScheduleEvent {
   createdByName: string | null;
   pinned: boolean;          // 상단 고정(하이라이트)
   attachmentName: string | null; // 첨부파일 원본명(없으면 null)
+  taskTotal: number;        // 작업 항목 수
+  taskDone: number;         // 완료된 작업 항목 수
   createdAt: string;
+}
+
+// 작업 항목 상태: 대기 / 수정중 / 수정완료
+export type ScheduleTaskStatus = 'PENDING' | 'IN_PROGRESS' | 'DONE';
+
+export const TASK_STATUS_LABELS: Record<ScheduleTaskStatus, string> = {
+  PENDING: '대기',
+  IN_PROGRESS: '수정중',
+  DONE: '수정완료',
+};
+
+export interface ScheduleTask {
+  id: number;
+  eventId: number;
+  section: string | null;
+  title: string;
+  status: ScheduleTaskStatus;
+  sortOrder: number | null;
+  updatedAt: string;
 }
 
 export interface ScheduleEventRequest {

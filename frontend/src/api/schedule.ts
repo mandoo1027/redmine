@@ -1,5 +1,5 @@
 import client from './client';
-import type { ScheduleEvent, ScheduleEventRequest } from '../types';
+import type { ScheduleEvent, ScheduleEventRequest, ScheduleTask, ScheduleTaskStatus } from '../types';
 
 // 조회는 공개(비로그인). from/to(YYYY-MM-DD)로 기간 필터 가능.
 export async function fetchScheduleEvents(from?: string, to?: string): Promise<ScheduleEvent[]> {
@@ -45,4 +45,35 @@ export async function downloadScheduleAttachment(id: number, filename: string): 
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+/* ===== 작업 항목(체크리스트) ===== */
+
+// 목록 조회 — 공개(비로그인 허용)
+export async function fetchScheduleTasks(eventId: number): Promise<ScheduleTask[]> {
+  const { data } = await client.get<ScheduleTask[]>(`/schedule/${eventId}/tasks`);
+  return data;
+}
+
+// 일괄 등록(로그인 필요). replace=true 면 기존 항목을 교체.
+export async function bulkCreateScheduleTasks(
+  eventId: number,
+  tasks: { title: string; section?: string | null; status?: ScheduleTaskStatus; sortOrder?: number }[],
+  replace = false,
+): Promise<ScheduleTask[]> {
+  const { data } = await client.post<ScheduleTask[]>(`/schedule/${eventId}/tasks/bulk`, { tasks, replace });
+  return data;
+}
+
+// 수정(상태 변경 등, 로그인 필요). 보내지 않은 필드는 변경되지 않는다.
+export async function updateScheduleTask(
+  taskId: number,
+  payload: { status?: ScheduleTaskStatus; title?: string; section?: string | null; sortOrder?: number },
+): Promise<ScheduleTask> {
+  const { data } = await client.put<ScheduleTask>(`/schedule/tasks/${taskId}`, payload);
+  return data;
+}
+
+export async function deleteScheduleTask(taskId: number): Promise<void> {
+  await client.delete(`/schedule/tasks/${taskId}`);
 }

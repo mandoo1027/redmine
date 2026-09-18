@@ -5,10 +5,18 @@ import {
   deleteScheduleEvent,
   downloadScheduleAttachment,
   fetchScheduleEvents,
+  fetchScheduleTasks,
   updateScheduleEvent,
+  updateScheduleTask,
   uploadScheduleAttachment,
 } from '../api/schedule';
-import type { ScheduleEvent, ScheduleEventRequest } from '../types';
+import type {
+  ScheduleEvent,
+  ScheduleEventRequest,
+  ScheduleTask,
+  ScheduleTaskStatus,
+} from '../types';
+import { TASK_STATUS_LABELS } from '../types';
 
 /* ---------- 날짜 유틸 (로컬 기준, 타임존 드리프트 없이) ---------- */
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -56,6 +64,14 @@ const COLORS = [
   { hex: '#64748b', name: '회색' },
 ];
 const DEFAULT_COLOR = COLORS[0].hex;
+
+// 작업 항목 상태 배지 색
+const STATUS_STYLE: Record<ScheduleTaskStatus, string> = {
+  PENDING: 'bg-slate-500 text-white',
+  IN_PROGRESS: 'bg-amber-500 text-white',
+  DONE: 'bg-emerald-500 text-white',
+};
+const STATUS_ORDER: ScheduleTaskStatus[] = ['PENDING', 'IN_PROGRESS', 'DONE'];
 
 interface EditorState {
   id: number | null;
@@ -186,7 +202,37 @@ export default function SchedulePage() {
     try {
       await downloadScheduleAttachment(e.id, e.attachmentName);
     } catch {
-      alert('다운로드에 실패했습니다. 로그인이 필요할 수 있습니다.');
+      alert('다운로드에 실패했습니다.');
+    }
+  };
+
+  /* ----- 작업 항목(체크리스트) ----- */
+  const [tasks, setTasks] = useState<ScheduleTask[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+
+  useEffect(() => {
+    if (!viewEvent) {
+      setTasks([]);
+      return;
+    }
+    setTasksLoading(true);
+    fetchScheduleTasks(viewEvent.id)
+      .then(setTasks)
+      .catch(() => setTasks([]))
+      .finally(() => setTasksLoading(false));
+  }, [viewEvent]);
+
+  // 상태 변경(대기/수정중/수정완료) — 낙관적 업데이트 후 실패 시 롤백
+  const changeTaskStatus = async (task: ScheduleTask, status: ScheduleTaskStatus) => {
+    if (!canEdit || task.status === status) return;
+    const prev = tasks;
+    setTasks((ts) => ts.map((t) => (t.id === task.id ? { ...t, status } : t)));
+    try {
+      await updateScheduleTask(task.id, { status });
+      load(); // 목록의 진행률(taskDone) 갱신
+    } catch {
+      setTasks(prev);
+      alert('상태 변경에 실패했습니다. 로그인 상태를 확인해 주세요.');
     }
   };
 
@@ -262,7 +308,7 @@ export default function SchedulePage() {
             {pinnedEvents.map((e) => (
               <div
                 key={e.id}
-                onClick={() => (canEdit ? openEdit(e) : setViewEvent(e))}
+                onClick={() => setViewEvent(e)}
                 className="flex cursor-pointer items-center gap-3 rounded-xl border-l-4 bg-white p-4 shadow-sm hover:shadow"
                 style={{ borderLeftColor: e.color || DEFAULT_COLOR }}
               >
@@ -365,8 +411,7 @@ export default function SchedulePage() {
                           key={e.id}
                           onClick={(ev) => {
                             ev.stopPropagation();
-                            if (canEdit) openEdit(e);
-                            else setViewEvent(e);
+                            setViewEvent(e);
                           }}
                           className="block w-full truncate rounded px-1.5 py-0.5 text-left text-xs font-medium text-white"
                           style={{ backgroundColor: color }}
@@ -410,7 +455,7 @@ export default function SchedulePage() {
                     return (
                       <button
                         key={e.id}
-                        onClick={() => (canEdit ? openEdit(e) : setViewEvent(e))}
+                        onClick={() => setViewEvent(e)}
                         className={`flex w-full items-start gap-2.5 px-4 py-3 text-left hover:bg-slate-50 ${
                           past ? 'opacity-50' : ''
                         }`}
@@ -597,34 +642,36 @@ export default function SchedulePage() {
         </div>
       )}
 
-      {/* 읽기 전용 상세(비로그인) */}
+      {/* 일정 상세 팝업 — 작업 목록(대기/수정중/수정완료) 포함 */}
       {viewEvent && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={() => setViewEvent(null)}
         >
-          <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex max-h-[88vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div
-              className="rounded-t-xl px-5 py-3 text-white"
+              className="flex items-start justify-between rounded-t-xl px-5 py-3 text-white"
               style={{ backgroundColor: viewEvent.color || DEFAULT_COLOR }}
             >
-              <h2 className="text-lg font-bold">{viewEvent.title}</h2>
-            </div>
-            <div className="space-y-2 px-5 py-4 text-sm text-slate-700">
-              <div>
-                <span className="text-slate-400">기간 </span>
-                {viewEvent.startDate}
-                {viewEvent.endDate && viewEvent.endDate !== viewEvent.startDate ? ` ~ ${viewEvent.endDate}` : ''}
+              <div className="min-w-0">
+                <h2 className="truncate text-lg font-bold">{viewEvent.title}</h2>
+                <p className="text-xs opacity-90">
+                  {rangeText(viewEvent)}
+                  {viewEvent.timeText ? ` · ${viewEvent.timeText}` : ''}
+                </p>
               </div>
-              {viewEvent.timeText && (
-                <div>
-                  <span className="text-slate-400">시간 </span>
-                  {viewEvent.timeText}
-                </div>
-              )}
-              {viewEvent.description && <div className="whitespace-pre-wrap pt-1">{viewEvent.description}</div>}
+              <button onClick={() => setViewEvent(null)} className="ml-2 text-2xl leading-none">
+                &times;
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4 text-sm text-slate-700">
+              {viewEvent.description && <div className="whitespace-pre-wrap">{viewEvent.description}</div>}
               {viewEvent.attachmentName && (
-                <div className="pt-1">
+                <div>
                   <span className="text-slate-400">첨부 </span>
                   <button
                     type="button"
@@ -635,11 +682,101 @@ export default function SchedulePage() {
                   </button>
                 </div>
               )}
+
+              {/* 작업 목록 */}
+              {tasksLoading ? (
+                <div className="py-8 text-center text-slate-400">작업 목록 불러오는 중…</div>
+              ) : tasks.length > 0 ? (
+                (() => {
+                  const done = tasks.filter((t) => t.status === 'DONE').length;
+                  const prog = tasks.filter((t) => t.status === 'IN_PROGRESS').length;
+                  const pct = Math.round((done / tasks.length) * 100);
+                  const sections = Array.from(new Set(tasks.map((t) => t.section || '')));
+                  return (
+                    <div className="pt-2">
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="font-bold text-slate-800">
+                          작업 목록 <span className="text-slate-400">({tasks.length})</span>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          수정완료 {done} · 수정중 {prog} · 대기 {tasks.length - done - prog}
+                        </div>
+                      </div>
+                      <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div className="h-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+
+                      {sections.map((sec) => (
+                        <div key={sec} className="mb-3">
+                          {sec && <div className="mb-1 text-xs font-bold text-slate-500">{sec}</div>}
+                          <div className="space-y-1">
+                            {tasks
+                              .filter((t) => (t.section || '') === sec)
+                              .map((t) => (
+                                <div
+                                  key={t.id}
+                                  className="flex items-start justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2"
+                                >
+                                  <span
+                                    className={`min-w-0 flex-1 break-words ${
+                                      t.status === 'DONE' ? 'text-slate-400 line-through' : 'text-slate-700'
+                                    }`}
+                                  >
+                                    {t.title}
+                                  </span>
+                                  {canEdit ? (
+                                    <div className="flex shrink-0 gap-1">
+                                      {STATUS_ORDER.map((s) => (
+                                        <button
+                                          key={s}
+                                          onClick={() => changeTaskStatus(t, s)}
+                                          className={`rounded px-2 py-0.5 text-xs font-medium ${
+                                            t.status === s
+                                              ? STATUS_STYLE[s]
+                                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                          }`}
+                                        >
+                                          {TASK_STATUS_LABELS[s]}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span
+                                      className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[t.status]}`}
+                                    >
+                                      {TASK_STATUS_LABELS[t.status]}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()
+              ) : null}
+
               {viewEvent.createdByName && (
                 <div className="pt-1 text-xs text-slate-400">작성: {viewEvent.createdByName}</div>
               )}
             </div>
-            <div className="flex justify-end border-t px-5 py-3">
+
+            <div className="flex justify-between border-t px-5 py-3">
+              <div>
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      const ev = viewEvent;
+                      setViewEvent(null);
+                      openEdit(ev);
+                    }}
+                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    일정 수정
+                  </button>
+                )}
+              </div>
               <button
                 onClick={() => setViewEvent(null)}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"

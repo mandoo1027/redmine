@@ -3,6 +3,9 @@ package com.example.redmine.schedule;
 import com.example.redmine.auth.CurrentUser;
 import com.example.redmine.schedule.dto.ScheduleEventDto;
 import com.example.redmine.schedule.dto.ScheduleEventRequest;
+import com.example.redmine.schedule.dto.ScheduleTaskBulkRequest;
+import com.example.redmine.schedule.dto.ScheduleTaskDto;
+import com.example.redmine.schedule.dto.ScheduleTaskRequest;
 import com.example.redmine.user.User;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
@@ -87,6 +90,36 @@ public class ScheduleController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + filename)
                 .body(resource);
+    }
+
+    /* ===== 작업 항목(체크리스트) ===== */
+
+    /** 작업 항목 목록 — 공개(비로그인 조회 허용) */
+    @GetMapping("/api/schedule/{eventId}/tasks")
+    public List<ScheduleTaskDto> listTasks(@PathVariable Long eventId) {
+        return scheduleService.listTasks(eventId);
+    }
+
+    /** 작업 항목 일괄 등록(로그인 필요) */
+    @PostMapping("/api/schedule/{eventId}/tasks/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<ScheduleTaskDto> bulkCreateTasks(@CurrentUser User me, @PathVariable Long eventId,
+                                                 @RequestBody ScheduleTaskBulkRequest request) {
+        return scheduleService.bulkCreateTasks(eventId, request);
+    }
+
+    /** 작업 항목 수정(상태 변경 등, 로그인 필요) */
+    @PutMapping("/api/schedule/tasks/{taskId}")
+    public ScheduleTaskDto updateTask(@CurrentUser User me, @PathVariable Long taskId,
+                                      @RequestBody ScheduleTaskRequest request) {
+        return scheduleService.updateTask(taskId, request);
+    }
+
+    /** 작업 항목 삭제(로그인 필요) */
+    @DeleteMapping("/api/schedule/tasks/{taskId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTask(@CurrentUser User me, @PathVariable Long taskId) {
+        scheduleService.deleteTask(taskId);
     }
 
     private String encodeFilename(String name) {

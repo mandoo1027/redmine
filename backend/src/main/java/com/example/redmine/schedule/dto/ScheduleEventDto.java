@@ -16,9 +16,15 @@ public record ScheduleEventDto(
         String createdByName,
         boolean pinned,
         String attachmentName,
+        int taskTotal,
+        int taskDone,
         LocalDateTime createdAt
 ) {
     public static ScheduleEventDto from(ScheduleEvent e) {
+        return from(e, 0, 0);
+    }
+
+    public static ScheduleEventDto from(ScheduleEvent e, int taskTotal, int taskDone) {
         return new ScheduleEventDto(
                 e.getId(),
                 e.getTitle(),
@@ -30,6 +36,8 @@ public record ScheduleEventDto(
                 e.getCreatedByName(),
                 Boolean.TRUE.equals(e.getPinned()),
                 e.getAttachmentName(),
+                taskTotal,
+                taskDone,
                 e.getCreatedAt()
         );
     }

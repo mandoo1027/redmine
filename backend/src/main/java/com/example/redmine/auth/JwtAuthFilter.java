@@ -47,7 +47,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 생성/수정/삭제/업로드는 아래 토큰 검증을 거친다.
         if (request.getMethod().equals("GET")
                 && (path.equals("/api/schedule")
-                    || path.matches("/api/schedule/\\d+/attachment"))) {
+                    || path.matches("/api/schedule/\\d+/attachment")
+                    || path.matches("/api/schedule/\\d+/tasks"))) {
             filterChain.doFilter(request, response);
             return;
         }
