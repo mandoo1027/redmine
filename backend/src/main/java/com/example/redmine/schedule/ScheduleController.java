@@ -5,8 +5,12 @@ import com.example.redmine.schedule.dto.ScheduleEventDto;
 import com.example.redmine.schedule.dto.ScheduleEventRequest;
 import com.example.redmine.user.User;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +20,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -56,6 +63,35 @@ public class ScheduleController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         scheduleService.delete(id);
+    }
+
+    /** 첨부파일 업로드(로그인 필요) */
+    @PostMapping("/api/schedule/{id}/attachment")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ScheduleEventDto uploadAttachment(@CurrentUser User me, @PathVariable Long id,
+                                             @RequestParam("file") MultipartFile file) {
+        return scheduleService.uploadAttachment(id, file);
+    }
+
+    /** 첨부파일 다운로드 — 업무 문서 보호를 위해 로그인 필요(공개 화이트리스트에서 제외) */
+    @GetMapping("/api/schedule/{id}/attachment")
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable Long id) {
+        ScheduleEvent e = scheduleService.getEntity(id);
+        Resource resource = scheduleService.loadAttachment(id);
+        String contentType = e.getAttachmentContentType() != null
+                ? e.getAttachmentContentType()
+                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        String filename = encodeFilename(e.getAttachmentName());
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + filename)
+                .body(resource);
+    }
+
+    private String encodeFilename(String name) {
+        if (name == null) return "file";
+        return URLEncoder.encode(name, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private String displayName(User me) {

@@ -25,3 +25,24 @@ export async function updateScheduleEvent(id: number, payload: ScheduleEventRequ
 export async function deleteScheduleEvent(id: number): Promise<void> {
   await client.delete(`/schedule/${id}`);
 }
+
+// 첨부파일 업로드(로그인 필요, multipart)
+export async function uploadScheduleAttachment(id: number, file: File): Promise<ScheduleEvent> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const { data } = await client.post<ScheduleEvent>(`/schedule/${id}/attachment`, fd);
+  return data;
+}
+
+// 첨부파일 다운로드(로그인 필요) — 토큰이 자동 첨부되며, blob 을 받아 저장 트리거.
+export async function downloadScheduleAttachment(id: number, filename: string): Promise<void> {
+  const res = await client.get(`/schedule/${id}/attachment`, { responseType: 'blob' });
+  const url = URL.createObjectURL(res.data as Blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'download';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

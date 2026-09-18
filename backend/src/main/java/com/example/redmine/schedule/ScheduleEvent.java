@@ -41,6 +41,22 @@ public class ScheduleEvent extends BaseEntity {
     @Column(name = "created_by_name")
     private String createdByName;
 
+    /** 상단 고정(하이라이트) 여부 */
+    @Column(name = "pinned")
+    private Boolean pinned;
+
+    /** 첨부파일 원본명 */
+    @Column(name = "attachment_name")
+    private String attachmentName;
+
+    /** 첨부파일 저장명(UUID) */
+    @Column(name = "attachment_stored")
+    private String attachmentStored;
+
+    /** 첨부파일 콘텐츠 타입 */
+    @Column(name = "attachment_content_type")
+    private String attachmentContentType;
+
     protected ScheduleEvent() {
     }
 
@@ -103,5 +119,37 @@ public class ScheduleEvent extends BaseEntity {
 
     public void setCreatedByName(String createdByName) {
         this.createdByName = createdByName;
+    }
+
+    public Boolean getPinned() {
+        return pinned;
+    }
+
+    public void setPinned(Boolean pinned) {
+        this.pinned = pinned;
+    }
+
+    public String getAttachmentName() {
+        return attachmentName;
+    }
+
+    public void setAttachmentName(String attachmentName) {
+        this.attachmentName = attachmentName;
+    }
+
+    public String getAttachmentStored() {
+        return attachmentStored;
+    }
+
+    public void setAttachmentStored(String attachmentStored) {
+        this.attachmentStored = attachmentStored;
+    }
+
+    public String getAttachmentContentType() {
+        return attachmentContentType;
+    }
+
+    public void setAttachmentContentType(String attachmentContentType) {
+        this.attachmentContentType = attachmentContentType;
     }
 }

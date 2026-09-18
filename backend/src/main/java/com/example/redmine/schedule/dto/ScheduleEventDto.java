@@ -14,6 +14,8 @@ public record ScheduleEventDto(
         String color,
         String description,
         String createdByName,
+        boolean pinned,
+        String attachmentName,
         LocalDateTime createdAt
 ) {
     public static ScheduleEventDto from(ScheduleEvent e) {
@@ -26,6 +28,8 @@ public record ScheduleEventDto(
                 e.getColor(),
                 e.getDescription(),
                 e.getCreatedByName(),
+                Boolean.TRUE.equals(e.getPinned()),
+                e.getAttachmentName(),
                 e.getCreatedAt()
         );
     }

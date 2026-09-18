@@ -166,6 +166,8 @@ export interface ScheduleEvent {
   color: string | null;     // hex
   description: string | null;
   createdByName: string | null;
+  pinned: boolean;          // 상단 고정(하이라이트)
+  attachmentName: string | null; // 첨부파일 원본명(없으면 null)
   createdAt: string;
 }
 
@@ -176,4 +178,5 @@ export interface ScheduleEventRequest {
   timeText?: string | null;
   color?: string | null;
   description?: string | null;
+  pinned?: boolean;
 }

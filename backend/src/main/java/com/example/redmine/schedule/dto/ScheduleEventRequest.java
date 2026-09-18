@@ -11,6 +11,7 @@ public record ScheduleEventRequest(
         LocalDate endDate,
         String timeText,
         String color,
-        String description
+        String description,
+        Boolean pinned
 ) {
 }

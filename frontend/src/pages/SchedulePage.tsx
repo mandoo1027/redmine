@@ -3,8 +3,10 @@ import { useAuth } from '../auth/AuthContext';
 import {
   createScheduleEvent,
   deleteScheduleEvent,
+  downloadScheduleAttachment,
   fetchScheduleEvents,
   updateScheduleEvent,
+  uploadScheduleAttachment,
 } from '../api/schedule';
 import type { ScheduleEvent, ScheduleEventRequest } from '../types';
 
@@ -15,9 +17,32 @@ const parseYmd = (s: string) => {
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y, m - 1, d);
 };
+const shortDate = (s: string) => {
+  const d = parseYmd(s);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
+const rangeText = (e: { startDate: string; endDate: string | null }) =>
+  e.endDate && e.endDate !== e.startDate
+    ? `${shortDate(e.startDate)} ~ ${shortDate(e.endDate)}`
+    : shortDate(e.startDate);
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const sameYmd = (a: Date, b: Date) => ymd(a) === ymd(b);
+
+// 시작일 기준 경과일수(오늘 - 시작일). 예: 9/8 접수 → 9/18 이면 10.
+const daysSince = (startDate: string) => {
+  const start = parseYmd(startDate);
+  const now = new Date();
+  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor((t.getTime() - start.getTime()) / 86400000);
+};
+// "N일째" 배지 라벨(당일/미래는 별도 표기)
+const dayBadge = (startDate: string) => {
+  const n = daysSince(startDate);
+  if (n < 0) return `D${n}`;
+  if (n === 0) return '오늘';
+  return `${n}일째`;
+};
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const COLORS = [
@@ -40,6 +65,8 @@ interface EditorState {
   timeText: string;
   color: string;
   description: string;
+  pinned: boolean;
+  attachmentName: string | null;
 }
 
 const emptyEditor = (date: string): EditorState => ({
@@ -50,6 +77,8 @@ const emptyEditor = (date: string): EditorState => ({
   timeText: '',
   color: DEFAULT_COLOR,
   description: '',
+  pinned: false,
+  attachmentName: null,
 });
 
 export default function SchedulePage() {
@@ -68,19 +97,19 @@ export default function SchedulePage() {
     const first = startOfMonth(cursor);
     return addDays(first, -first.getDay());
   }, [cursor]);
-  const gridEnd = useMemo(() => addDays(gridStart, 41), [gridStart]);
   const days = useMemo(
     () => Array.from({ length: 42 }, (_, i) => addDays(gridStart, i)),
     [gridStart],
   );
 
+  // 달력 + 오른쪽 아젠다 목록에 함께 쓰므로 전체 일정을 한 번에 불러온다(달력은 날짜별로 필터).
   const load = useCallback(() => {
     setLoading(true);
-    fetchScheduleEvents(ymd(gridStart), ymd(gridEnd))
+    fetchScheduleEvents()
       .then(setEvents)
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
-  }, [gridStart, gridEnd]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -117,7 +146,48 @@ export default function SchedulePage() {
       timeText: e.timeText ?? '',
       color: e.color ?? DEFAULT_COLOR,
       description: e.description ?? '',
+      pinned: e.pinned,
+      attachmentName: e.attachmentName,
     });
+  };
+
+  // 상단 고정(하이라이트) 일정 — 시작일 오름차순
+  const pinnedEvents = useMemo(
+    () =>
+      [...events]
+        .filter((e) => e.pinned)
+        .sort((a, b) => (a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : a.id - b.id)),
+    [events],
+  );
+  // 오른쪽 아젠다 — 전체 일정 시작일 오름차순
+  const sortedEvents = useMemo(
+    () =>
+      [...events].sort((a, b) => (a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : a.id - b.id)),
+    [events],
+  );
+  const todayKey = ymd(today);
+
+  // 첨부 업로드(수정 중인 기존 일정 대상)
+  const onUploadAttachment = async (file: File) => {
+    if (!editor?.id) return;
+    setSaving(true);
+    try {
+      const updated = await uploadScheduleAttachment(editor.id, file);
+      setEditor({ ...editor, attachmentName: updated.attachmentName });
+      load();
+    } catch {
+      alert('첨부 업로드에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const onDownload = async (e: { id: number; attachmentName: string | null }) => {
+    if (!e.attachmentName) return;
+    try {
+      await downloadScheduleAttachment(e.id, e.attachmentName);
+    } catch {
+      alert('다운로드에 실패했습니다. 로그인이 필요할 수 있습니다.');
+    }
   };
 
   const submit = async () => {
@@ -129,6 +199,7 @@ export default function SchedulePage() {
       timeText: editor.timeText.trim() || null,
       color: editor.color || null,
       description: editor.description.trim() || null,
+      pinned: editor.pinned,
     };
     setSaving(true);
     try {
@@ -162,7 +233,7 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-3 sm:px-6">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         {/* 헤더 */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -185,6 +256,39 @@ export default function SchedulePage() {
           </div>
         </div>
 
+        {/* 상단 고정: 하이라이트 일정(심사 현황 등) */}
+        {pinnedEvents.length > 0 && (
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            {pinnedEvents.map((e) => (
+              <div
+                key={e.id}
+                onClick={() => (canEdit ? openEdit(e) : setViewEvent(e))}
+                className="flex cursor-pointer items-center gap-3 rounded-xl border-l-4 bg-white p-4 shadow-sm hover:shadow"
+                style={{ borderLeftColor: e.color || DEFAULT_COLOR }}
+              >
+                <div
+                  className="flex h-14 w-16 shrink-0 items-center justify-center rounded-lg text-white"
+                  style={{ backgroundColor: e.color || DEFAULT_COLOR }}
+                >
+                  <span className="text-base font-bold leading-none">{dayBadge(e.startDate)}</span>
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-base font-bold text-slate-800">{e.title}</div>
+                  <div className="text-xs text-slate-500">
+                    {shortDate(e.startDate)} 접수{e.description ? ` · ${e.description}` : ''}
+                  </div>
+                  {e.attachmentName && (
+                    <div className="mt-0.5 truncate text-xs text-slate-400">📎 {e.attachmentName}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+          {/* 왼쪽: 달력 */}
+          <div className="min-w-0 flex-1">
         {/* 월 네비게이션 */}
         <div className="mb-3 flex items-center justify-center gap-4">
           <button
@@ -288,6 +392,52 @@ export default function SchedulePage() {
             ? '날짜 칸을 클릭하면 일정 추가, 일정을 클릭하면 수정할 수 있어요.'
             : '이 달력은 공유용입니다. 편집은 관리자 로그인 후 가능합니다.'}
         </p>
+          </div>
+
+          {/* 오른쪽: 일정 목록(아젠다) */}
+          <aside className="w-full shrink-0 lg:w-80">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 px-4 py-3 text-base font-bold text-slate-800">
+                일정 목록
+              </div>
+              <div className="max-h-[560px] divide-y divide-slate-100 overflow-y-auto">
+                {sortedEvents.length === 0 ? (
+                  <div className="px-4 py-10 text-center text-sm text-slate-400">등록된 일정이 없습니다.</div>
+                ) : (
+                  sortedEvents.map((e) => {
+                    const past =
+                      (e.endDate && e.endDate >= e.startDate ? e.endDate : e.startDate) < todayKey;
+                    return (
+                      <button
+                        key={e.id}
+                        onClick={() => (canEdit ? openEdit(e) : setViewEvent(e))}
+                        className={`flex w-full items-start gap-2.5 px-4 py-3 text-left hover:bg-slate-50 ${
+                          past ? 'opacity-50' : ''
+                        }`}
+                      >
+                        <span
+                          className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: e.color || DEFAULT_COLOR }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-medium text-slate-400">{rangeText(e)}</div>
+                          <div className="truncate text-sm font-semibold text-slate-800">
+                            {e.pinned ? '📌 ' : ''}
+                            {e.title}
+                          </div>
+                          {e.timeText && <div className="text-xs text-slate-500">{e.timeText}</div>}
+                          {e.attachmentName && (
+                            <div className="truncate text-xs text-slate-400">📎 {e.attachmentName}</div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* 편집 모달 */}
@@ -371,6 +521,48 @@ export default function SchedulePage() {
                   placeholder="상세 내용(선택)"
                 />
               </div>
+
+              {/* 상단 고정(하이라이트) */}
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={editor.pinned}
+                  onChange={(e) => setEditor({ ...editor, pinned: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                상단에 고정(하이라이트) — 접수일 기준 “N일째” 표시
+              </label>
+
+              {/* 첨부파일 */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-600">첨부파일</label>
+                {editor.id == null ? (
+                  <p className="text-xs text-slate-400">일정을 먼저 저장한 뒤 첨부할 수 있어요.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {editor.attachmentName && (
+                      <button
+                        type="button"
+                        onClick={() => onDownload({ id: editor.id!, attachmentName: editor.attachmentName })}
+                        className="block max-w-full truncate text-left text-sm text-blue-600 hover:underline"
+                      >
+                        📎 {editor.attachmentName}
+                      </button>
+                    )}
+                    <input
+                      type="file"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) onUploadAttachment(f);
+                        e.target.value = '';
+                      }}
+                      disabled={saving}
+                      className="block w-full text-xs text-slate-500 file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-600 hover:file:bg-slate-200"
+                    />
+                    <p className="text-[11px] text-slate-400">다운로드는 로그인한 사용자만 가능합니다.</p>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center justify-between border-t px-5 py-3">
               <div>
@@ -431,6 +623,12 @@ export default function SchedulePage() {
                 </div>
               )}
               {viewEvent.description && <div className="whitespace-pre-wrap pt-1">{viewEvent.description}</div>}
+              {viewEvent.attachmentName && (
+                <div className="pt-1">
+                  <span className="text-slate-400">첨부 </span>🔒 {viewEvent.attachmentName}
+                  <span className="ml-1 text-xs text-slate-400">(로그인 후 다운로드)</span>
+                </div>
+              )}
               {viewEvent.createdByName && (
                 <div className="pt-1 text-xs text-slate-400">작성: {viewEvent.createdByName}</div>
               )}
