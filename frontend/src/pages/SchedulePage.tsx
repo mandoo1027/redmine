@@ -720,8 +720,11 @@ export default function SchedulePage() {
                                   key={t.id}
                                   className="flex items-start justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2"
                                 >
+                                  {/* 요청 원문을 줄바꿈까지 그대로 보여준다.
+                                      whitespace 를 지정하지 않으면 여러 줄짜리 내용이
+                                      한 줄로 이어붙어 무슨 말인지 읽을 수 없다. */}
                                   <span
-                                    className={`min-w-0 flex-1 break-words ${
+                                    className={`min-w-0 flex-1 whitespace-pre-line break-words ${
                                       t.status === 'DONE' ? 'text-slate-400 line-through' : 'text-slate-700'
                                     }`}
                                   >
