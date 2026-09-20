@@ -281,7 +281,6 @@ export default function SchedulePage() {
     }
   };
 
-  const loginHref = `${import.meta.env.BASE_URL}login`;
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-3 sm:px-6">
@@ -302,17 +301,16 @@ export default function SchedulePage() {
             >
               🤖 안드로이드 앱 받기
             </a>
-            {canEdit ? (
+            {/* 로그인하지 않았으면 아무것도 두지 않는다.
+                이 화면은 외부에 공유하는 용도라 관리자 입구를 드러낼 이유가 없다.
+                관리자는 /redmine 로 직접 들어가 로그인한다. */}
+            {canEdit && (
               <button
                 onClick={() => openCreate(ymd(new Date()))}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
               >
                 ＋ 일정 추가
               </button>
-            ) : (
-              <a href={loginHref} className="text-sm text-slate-500 hover:text-blue-600 hover:underline">
-                관리자 로그인
-              </a>
             )}
           </div>
         </div>
@@ -450,7 +448,7 @@ export default function SchedulePage() {
         <p className="mt-3 text-center text-xs text-slate-400">
           {canEdit
             ? '날짜 칸을 클릭하면 일정 추가, 일정을 클릭하면 수정할 수 있어요.'
-            : '이 달력은 공유용입니다. 편집은 관리자 로그인 후 가능합니다.'}
+            : '이 달력은 공유용입니다.'}
         </p>
           </div>
 
