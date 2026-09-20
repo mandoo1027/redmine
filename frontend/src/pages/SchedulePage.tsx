@@ -55,6 +55,9 @@ const dayBadge = (startDate: string) => {
   return `${n}일째`;
 };
 
+// 안드로이드 앱(APK) 내려받기 주소. Play 스토어 심사 전이라 직접 배포한다.
+const APK_URL = 'https://mforet.kr/app/mforet-student.apk';
+
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const COLORS = [
   { hex: '#3b82f6', name: '파랑' },
@@ -290,6 +293,15 @@ export default function SchedulePage() {
             {loading && <span className="text-sm text-slate-400">불러오는 중…</span>}
           </div>
           <div className="flex items-center gap-2">
+            {/* 안드로이드 앱(APK) 직접 내려받기.
+                Play 스토어 심사가 끝나기 전에도 링크만으로 설치해 볼 수 있게 둔다.
+                로그인 여부와 상관없이 누구나 보이게 한다 — 이 페이지를 공유하는 이유다. */}
+            <a
+              href={APK_URL}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              🤖 안드로이드 앱 받기
+            </a>
             {canEdit ? (
               <button
                 onClick={() => openCreate(ymd(new Date()))}
