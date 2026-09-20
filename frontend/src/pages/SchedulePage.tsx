@@ -37,18 +37,21 @@ const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), 
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const sameYmd = (a: Date, b: Date) => ymd(a) === ymd(b);
 
-// 시작일 기준 경과일수(오늘 - 시작일). 예: 9/8 접수 → 9/18 이면 10.
+// 시작일을 1일째로 세는 경과일수. 예: 9/8 접수 → 9/20 이면 13일째.
+//
+// 예전에는 '오늘 - 시작일' 을 그대로 썼다. 그러면 접수 당일이 0,
+// 9/8 접수 → 9/20 이 "12일째" 가 되어 실제로 상대방에게 대는 날짜와 하루 어긋난다.
+// (심사 지연 문의처럼 날짜를 근거로 말해야 할 때 문제가 된다)
 const daysSince = (startDate: string) => {
   const start = parseYmd(startDate);
   const now = new Date();
   const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.floor((t.getTime() - start.getTime()) / 86400000);
+  return Math.floor((t.getTime() - start.getTime()) / 86400000) + 1;
 };
-// "N일째" 배지 라벨(당일/미래는 별도 표기)
+// "N일째" 배지 라벨. 아직 시작 전이면 D-n 으로 남은 날을 보여준다.
 const dayBadge = (startDate: string) => {
   const n = daysSince(startDate);
-  if (n < 0) return `D${n}`;
-  if (n === 0) return '오늘';
+  if (n <= 0) return `D${n - 1}`;
   return `${n}일째`;
 };
 
