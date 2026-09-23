@@ -181,6 +181,16 @@ export default function SchedulePage() {
         .sort((a, b) => (a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : a.id - b.id)),
     [events],
   );
+  // 헤더의 작업 목록 바로가기 — 항목이 붙은 일정만, 최근 것이 먼저.
+  // 차수가 쌓이면 버튼이 늘어나므로 최근 2개까지만 둔다(헤더가 넘치지 않게).
+  const taskEvents = useMemo(
+    () =>
+      [...events]
+        .filter((e) => (e.taskTotal ?? 0) > 0)
+        .sort((a, b) => (a.startDate > b.startDate ? -1 : a.startDate < b.startDate ? 1 : b.id - a.id))
+        .slice(0, 2),
+    [events],
+  );
   // 오른쪽 아젠다 — 전체 일정 시작일 오름차순
   const sortedEvents = useMemo(
     () =>
@@ -292,6 +302,19 @@ export default function SchedulePage() {
             {loading && <span className="text-sm text-slate-400">불러오는 중…</span>}
           </div>
           <div className="flex items-center gap-2">
+            {/* 작업 목록 바로가기.
+                수정안 진행률은 고객에게 가장 자주 보여주는 화면인데, 달력에서 해당 날짜를
+                찾아 눌러야만 열렸다. 목록이 붙은 일정을 헤더에 바로 꺼내 둔다.
+                여러 차수가 쌓이므로 날짜를 라벨에 넣어 어느 차수인지 바로 알게 한다. */}
+            {taskEvents.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => setViewEvent(e)}
+                className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
+              >
+                📋 {shortDate(e.startDate)} 작업 목록 {e.taskDone}/{e.taskTotal}
+              </button>
+            ))}
             {/* 안드로이드 앱(APK) 직접 내려받기.
                 Play 스토어 심사가 끝나기 전에도 링크만으로 설치해 볼 수 있게 둔다.
                 로그인 여부와 상관없이 누구나 보이게 한다 — 이 페이지를 공유하는 이유다. */}
