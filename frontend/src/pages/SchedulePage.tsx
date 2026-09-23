@@ -181,14 +181,17 @@ export default function SchedulePage() {
         .sort((a, b) => (a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : a.id - b.id)),
     [events],
   );
-  // 헤더의 작업 목록 바로가기 — 항목이 붙은 일정만, 최근 것이 먼저.
-  // 차수가 쌓이면 버튼이 늘어나므로 최근 2개까지만 둔다(헤더가 넘치지 않게).
+  // 헤더의 작업 목록 바로가기 — 항목이 붙은 일정 중 **가장 최근 것 하나만**.
+  //
+  // 수정안은 차수가 올라갈 때마다 이전 것을 대체한다. 9/20 확정본(35건)이 나온 뒤에도
+  // 9/17 목록(38건)이 0/38 인 채로 같이 떠 있으면, 고객이 "아무것도 안 했다"로 읽는다.
+  // 지난 차수는 달력에서 그 날짜를 눌러 그대로 볼 수 있으므로 헤더에서만 뺀다.
   const taskEvents = useMemo(
     () =>
       [...events]
         .filter((e) => (e.taskTotal ?? 0) > 0)
         .sort((a, b) => (a.startDate > b.startDate ? -1 : a.startDate < b.startDate ? 1 : b.id - a.id))
-        .slice(0, 2),
+        .slice(0, 1),
     [events],
   );
   // 오른쪽 아젠다 — 전체 일정 시작일 오름차순
